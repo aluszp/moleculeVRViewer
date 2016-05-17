@@ -6,12 +6,12 @@ using UnityEngine.UI;
 public class MainMenu : MonoBehaviour
 {
     public Texture2D menuBackground;
-    public static string pdbID; //a może użyć PlayerPrefs? tylko trzeba je potem usunąć z dysku!!!
+    public static string pdbID; //or PlayerPrefs?
     public bool ifEnterPressed = false;
-    public bool improperCode;
+    public bool improperCode; //if PDB ID doesn't contain 4 characters
     public static bool hideHydrogens = false;
 
-    // Use this for initialization
+    // initialization
 
     void Start()
     {
@@ -54,7 +54,7 @@ public class MainMenu : MonoBehaviour
 
 
 
-    // Update is called once per frame
+    //  once per frame
     void Update()
     {
         if (Input.GetKey(KeyCode.Return))

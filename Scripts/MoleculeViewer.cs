@@ -13,7 +13,7 @@ public class MoleculeViewer : MonoBehaviour
     
 
 
-    //initialisation
+    //initialization
     void Start()
     {
 
@@ -97,7 +97,7 @@ public class MoleculeViewer : MonoBehaviour
         }
     }
 
-    // in each frame:
+    // once per frame:
     void Update()
     {
         const float speed = 40f;
