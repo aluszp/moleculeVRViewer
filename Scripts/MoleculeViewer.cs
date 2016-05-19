@@ -8,9 +8,9 @@ using Assets.Code.Sources;
 public class MoleculeViewer : MonoBehaviour
 {
     public GameObject atomPrefab;
-    public Vector3 target = new Vector3(0,0,0); //geometric center of molecule
+    public Vector3 target = new Vector3(0, 0, 0); //geometric center of molecule
     bool rotating = true; //initial rotating
-    
+
 
 
     //initialization
@@ -30,14 +30,14 @@ public class MoleculeViewer : MonoBehaviour
             if (line.Substring(0, 6).Trim() == "ATOM")
             {
                 AtomParser thisAtom = new AtomParser(line);
-                
+
                 Draw(thisAtom);
                 numberOfAtoms++;
                 sumOfPositions += thisAtom.GetAtomPosition();
             }
 
-            
-            
+
+
 
         }
         target = sumOfPositions / numberOfAtoms;
@@ -48,7 +48,7 @@ public class MoleculeViewer : MonoBehaviour
     }
 
 
-   
+
 
 
     void Draw(AtomParser thisAtom)
@@ -67,8 +67,8 @@ public class MoleculeViewer : MonoBehaviour
         }
 
         print(thisAtom.GetResidueName());
-        
-       
+
+
     }
 
     void PckColouring(AtomParser thisAtom, GameObject atomBall)
