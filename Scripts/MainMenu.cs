@@ -38,7 +38,6 @@ public class MainMenu : MonoBehaviour
         startButton.onClick.AddListener(ButtonFunction);
 
         HideHydrogensFunction();
-        print(hideHydrogens);
         representationStyle = GetDropdownValue(representationDropdown);
         colouring = GetDropdownValue(colouringDropdown);
 
@@ -74,11 +73,12 @@ public class MainMenu : MonoBehaviour
     {
         bool result = false;
         string url = "http://files.rcsb.org/download/" + pdbID + ".pdb";
-        WebRequest webRequest = WebRequest.Create(url);
+        HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(url);
+        webRequest.Proxy = null;
         webRequest.Timeout = 1200; // miliseconds
         webRequest.Method = "HEAD";
         HttpWebResponse response = null;
-
+        
         try
         {
             response = (HttpWebResponse)webRequest.GetResponse();
@@ -94,7 +94,6 @@ public class MainMenu : MonoBehaviour
             if (response != null)
             {
                 response.Close();
-
             }
         }
 
