@@ -23,7 +23,7 @@ namespace Assets.Code.Sources
             serial = Int32.Parse(lineOfFile.Substring(6, 5).Trim());
             atomName = lineOfFile.Substring(12, 4).Trim();
             resName = lineOfFile.Substring(17, 3).Trim();
-            chainID = lineOfFile.Substring(21, 0).Trim();
+            chainID = lineOfFile.Substring(21, 1).Trim();
             resSeq = Int32.Parse(lineOfFile.Substring(22, 4).Trim());
             elementType = lineOfFile.Substring(77, 1).Trim();
         }

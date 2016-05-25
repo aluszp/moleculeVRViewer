@@ -3,6 +3,9 @@ using System.Collections;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System.Net;
+using System.IO;
+using System;
+
 
 public class MainMenu : MonoBehaviour
 {
@@ -23,6 +26,7 @@ public class MainMenu : MonoBehaviour
     void Start()
     {
 
+        startButton.onClick.AddListener(ButtonFunction);
 
     }
 
@@ -35,11 +39,10 @@ public class MainMenu : MonoBehaviour
         }
         pdbID = pdbInputField.text;
 
-        startButton.onClick.AddListener(ButtonFunction);
-
         HideHydrogensFunction();
         representationStyle = GetDropdownValue(representationDropdown);
         colouring = GetDropdownValue(colouringDropdown);
+
 
     }
 
@@ -56,7 +59,6 @@ public class MainMenu : MonoBehaviour
                     SceneManager.LoadScene("MoleculeScene");
                 }
             }
-
         }
 
         else
@@ -77,28 +79,32 @@ public class MainMenu : MonoBehaviour
         webRequest.Proxy = null;
         webRequest.Timeout = 1200; // miliseconds
         webRequest.Method = "HEAD";
+
         HttpWebResponse response = null;
-        
+
+
         try
         {
             response = (HttpWebResponse)webRequest.GetResponse();
-            result = true;
+            result = true; ;
         }
         catch (WebException webException)
         {
             errorText.text = "ERROR: " + url + " doesn't exist! " + webException.Message + " Try again.";
-
+            result = false;
         }
         finally
         {
             if (response != null)
             {
+
                 response.Close();
             }
         }
 
         return result;
     }
+
 
     string GetDropdownValue(Dropdown thisDropdown)
     {

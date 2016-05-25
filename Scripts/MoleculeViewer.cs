@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using System;
 using System.Net;
 using System.IO;
@@ -10,6 +11,7 @@ public class MoleculeViewer : MonoBehaviour
     public GameObject atomPrefab;
     public Vector3 target = new Vector3(0, 0, 0); //geometric center of molecule
     bool rotating = true; //initial rotating
+    Dictionary<string, Color> chainColorDicitonary = new Dictionary<string, Color>();
 
 
 
@@ -27,7 +29,7 @@ public class MoleculeViewer : MonoBehaviour
         {
             string line = file.ReadLine();
 
-            if (line.Substring(0, 6).Trim() == "ATOM")
+            if (line.Substring(0, 6).Trim() == "ATOM" || line.Substring(0, 6).Trim() == "HETATM")
             {
                 AtomParser thisAtom = new AtomParser(line);
 
@@ -36,7 +38,20 @@ public class MoleculeViewer : MonoBehaviour
                 sumOfPositions += thisAtom.GetAtomPosition();
             }
 
+            //creating dictionary of subunits and respective colours for subunits coloring method
+            else if ((MainMenu.colouring == "Subunits") && (line.Substring(0, 6).Trim() == "COMPND")
+                && (line.Contains("CHAIN:")))
+            {
 
+                string chains = line.Substring(18, 60).Trim().Trim(';').Replace(" ", "");
+                print(chains);
+
+                foreach (string chain in chains.Split(','))
+                {
+                    chainColorDicitonary.Add(chain, new Color(UnityEngine.Random.Range(0.0f, 1.0f), UnityEngine.Random.Range(0.0f, 1.0f), UnityEngine.Random.Range(0.0f, 1.0f)));
+                }
+
+            }
 
 
         }
@@ -55,23 +70,71 @@ public class MoleculeViewer : MonoBehaviour
     {
         if ((!MainMenu.hideHydrogens) || (MainMenu.hideHydrogens && thisAtom.GetElementType() != "H"))
         {
-            GameObject atomBall = (GameObject)Instantiate(atomPrefab, thisAtom.GetAtomPosition(), Quaternion.identity);
-            atomBall.name = thisAtom.GetAtomName();
-
-            if (MainMenu.hideHydrogens)
+            if (MainMenu.representationStyle == "Van der Waals")
             {
-                atomBall.transform.localScale = new Vector3(1.7f, 1.7f, 1.7f); //without hydrogens there is more space
+                GameObject atomBall = VdwRepresentation(thisAtom);
+
+                if (MainMenu.colouring == "CPK")
+                {
+                    CpkColouring(thisAtom, atomBall);
+                }
+                else if (MainMenu.colouring == "Subunits")
+                {
+                    SubunitsColouring(thisAtom, atomBall);
+                }
+                else if (MainMenu.colouring == "Residues")
+                {
+                    ResiduesColouring(thisAtom, atomBall);
+                }
+
             }
-
-            PckColouring(thisAtom, atomBall);
         }
-
-        print(thisAtom.GetResidueName());
 
 
     }
 
-    void PckColouring(AtomParser thisAtom, GameObject atomBall)
+
+
+    GameObject VdwRepresentation(AtomParser thisAtom)
+    {
+        GameObject atomBall = (GameObject)Instantiate(atomPrefab, thisAtom.GetAtomPosition(), Quaternion.identity);
+        atomBall.name = thisAtom.GetAtomName();
+
+        switch (thisAtom.GetElementType())
+        {
+            case "H":
+                atomBall.transform.localScale = new Vector3(1.2f, 1.2f, 1.2f) * 2;
+                break;
+            case "C":
+                atomBall.transform.localScale = new Vector3(1.7f, 1.7f, 1.7f) * 2;
+                break;
+            case "N":
+                atomBall.transform.localScale = new Vector3(1.55f, 1.55f, 1.55f) * 2;
+                break;
+            case "O":
+                atomBall.transform.localScale = new Vector3(1.52f, 1.52f, 1.52f) * 2;
+                break;
+            case "F":
+                atomBall.transform.localScale = new Vector3(1.47f, 1.47f, 1.47f) * 2;
+                break;
+            case "CL":
+                atomBall.transform.localScale = new Vector3(1.75f, 1.75f, 1.75f) * 2;
+                break;
+            case "P":
+                atomBall.transform.localScale = new Vector3(1.8f, 1.8f, 1.8f) * 2;
+                break;
+            case "S":
+                atomBall.transform.localScale = new Vector3(1.8f, 1.8f, 1.8f) * 2;
+                break;
+            case "MG":
+                atomBall.transform.localScale = new Vector3(1.73f, 1.73f, 1.73f) * 2;
+                break;
+        }
+        return atomBall;
+    }
+
+
+    void CpkColouring(AtomParser thisAtom, GameObject atomBall)
     {
         switch (thisAtom.GetElementType())
         {
@@ -93,8 +156,99 @@ public class MoleculeViewer : MonoBehaviour
             case "CL":
                 atomBall.GetComponent<Renderer>().material.color = Color.green;
                 break;
+            case "P":
+                atomBall.GetComponent<Renderer>().material.color = new Color32(255, 153, 0, 1); //orange
+                break;
+            case "S":
+                atomBall.GetComponent<Renderer>().material.color = Color.yellow;
+                break;
+            case "BR":
+                atomBall.GetComponent<Renderer>().material.color = new Color32(153, 0, 0, 1); //dark red
+                break;
+            case "MG":
+                atomBall.GetComponent<Renderer>().material.color = new Color32(0, 102, 0, 1); //dark green
+                break;
 
         }
+    }
+
+    void SubunitsColouring(AtomParser thisAtom, GameObject atomBall)
+    {
+
+        atomBall.GetComponent<Renderer>().material.color = chainColorDicitonary[thisAtom.GetChainID()];
+
+    }
+
+    void ResiduesColouring(AtomParser thisAtom, GameObject atomBall)
+    {
+        //http://life.nthu.edu.tw/~fmhsu/rasframe/COLORS.HTM
+
+        print(thisAtom.GetResidueName());
+        switch (thisAtom.GetResidueName())
+        {
+            case "ALA":
+                atomBall.GetComponent<Renderer>().material.color = new Color32(200, 200, 200, 1);
+                break;
+            case "ASN":
+                atomBall.GetComponent<Renderer>().material.color = new Color32(0, 220, 220, 1);
+                break;
+            case "ASP":
+                atomBall.GetComponent<Renderer>().material.color = new Color32(230, 10, 10, 1);
+                break;
+            case "ARG":
+                atomBall.GetComponent<Renderer>().material.color = new Color32(20, 90, 255, 1);
+                break;
+            case "CYS":
+                atomBall.GetComponent<Renderer>().material.color = new Color32(230, 230, 0, 1);
+                break;
+            case "GLN":
+                atomBall.GetComponent<Renderer>().material.color = new Color32(0, 220, 220, 1);
+                break;
+            case "GLU":
+                atomBall.GetComponent<Renderer>().material.color = new Color32(230, 10, 10, 1);
+                break;
+            case "GLY":
+                atomBall.GetComponent<Renderer>().material.color = new Color32(235, 235, 235, 1);
+                break;
+            case "HIS":
+                atomBall.GetComponent<Renderer>().material.color = new Color32(130, 130, 210, 1);
+                break;
+            case "ILE":
+                atomBall.GetComponent<Renderer>().material.color = new Color32(15, 130, 15, 1);
+                break;
+            case "LEU":
+                atomBall.GetComponent<Renderer>().material.color = new Color32(15, 130, 15, 1);
+                break;
+            case "LYS":
+                atomBall.GetComponent<Renderer>().material.color = new Color32(20, 90, 255, 1);
+                break;
+            case "MET":
+                atomBall.GetComponent<Renderer>().material.color = new Color32(230, 230, 0, 1);
+                break;
+            case "PHE":
+                atomBall.GetComponent<Renderer>().material.color = new Color32(50, 50, 170, 1);
+                break;
+            case "PRO":
+                atomBall.GetComponent<Renderer>().material.color = new Color32(220, 150, 130, 1);
+                break;
+            case "SER":
+                atomBall.GetComponent<Renderer>().material.color = new Color32(250, 150, 0, 1);
+                break;
+            case "THR":
+                atomBall.GetComponent<Renderer>().material.color = new Color32(250, 150, 0, 1);
+                break;
+            case "TYR":
+                atomBall.GetComponent<Renderer>().material.color = new Color32(50, 50, 170, 1);
+                break;
+            case "TRP":
+                atomBall.GetComponent<Renderer>().material.color = new Color32(180, 90, 180, 1);
+                break;
+            case "VAL":
+                atomBall.GetComponent<Renderer>().material.color = new Color32(15, 130, 15, 1);
+                break;
+
+        }
+
     }
 
     // once per frame:
@@ -112,6 +266,9 @@ public class MoleculeViewer : MonoBehaviour
             }
         }
         PerformKeyboardActions(speed);
+
+
+
 
     }
 
