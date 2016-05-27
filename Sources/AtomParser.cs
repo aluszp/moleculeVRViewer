@@ -11,6 +11,7 @@ namespace Assets.Code.Sources
     {
         int serial, resSeq;
         string recordName, atomName, resName, chainID, elementType;
+        float covalentRadii;
         Vector3 atomPosition;
         public AtomParser(string lineOfFile)
         {
@@ -59,6 +60,46 @@ namespace Assets.Code.Sources
         public string GetElementType()
         {
             return elementType;
+        }
+        public float GetCovalentRadii()
+        {
+            switch (GetElementType())
+            {
+                case "H":
+                    covalentRadii = 0.32f;
+                    break;
+                case "C":
+                    covalentRadii = 0.72f;
+                    break;
+                case "N":
+                    covalentRadii = 0.68f;
+                    break;
+                case "O":
+                    covalentRadii = 0.68f;
+                    break;
+                case "S":
+                    covalentRadii = 1.02f;
+                    break;
+                case "P":
+                    covalentRadii = 1.036f;
+                    break;
+                case "CA":
+                    covalentRadii = 0.992f;
+                    break;
+                case "FE":
+                    covalentRadii = 1.42f;
+                    break;
+                case "ZN":
+                    covalentRadii = 1.448f;
+                    break;
+                case "CD":
+                    covalentRadii = 1.688f;
+                    break;
+                case "I":
+                    covalentRadii = 1.4f;
+                    break;
+            }
+            return covalentRadii;
         }
     }
 }
