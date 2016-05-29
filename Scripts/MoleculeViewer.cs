@@ -373,38 +373,50 @@ public class MoleculeViewer : MonoBehaviour
         }
     }
 
-    void CartoonRepresentation(List<AtomParser> listOfAtoms) 
+    void CartoonRepresentation(List<AtomParser> listOfAtoms)
     {
-        chains = chains.Remove(chains.Length - 1);
-        List<Vector3> aCarbonsList = new List<Vector3>();
-        foreach (string chain in chains.Split(','))
+        Dictionary<string, List<Vector3>> dictionaryOfChainsAndCA = new Dictionary<string, List<Vector3>>();
+
+
+        foreach (AtomParser thisAtom in listOfAtoms)
         {
 
-            foreach (AtomParser thisAtom in listOfAtoms)
+            if (thisAtom.GetAtomName() == "CA")
             {
-
-                if (thisAtom.GetAtomName() == "CA" && thisAtom.GetChainID() == chain)
+                if (dictionaryOfChainsAndCA.ContainsKey(thisAtom.GetChainID()))
                 {
-                    
-                    aCarbonsList.Add(thisAtom.GetAtomPosition());
-                }
-                print("łańcuch: " + chain + " chainIDatomu: " + thisAtom.GetChainID());
+                    dictionaryOfChainsAndCA[thisAtom.GetChainID()].Add(thisAtom.GetAtomPosition());
 
+                }
+                else
+                {
+                    List<Vector3> listOfVectors = new List<Vector3>();
+                    listOfVectors.Add(thisAtom.GetAtomPosition());
+                    dictionaryOfChainsAndCA.Add(thisAtom.GetChainID(), listOfVectors);
+                }
 
             }
-            Vector3[] aCarbons = aCarbonsList.ToArray();
+
+
+
+        }
+        foreach(string chainKey in dictionaryOfChainsAndCA.Keys)
+        {
+            Vector3[] aCarbons = dictionaryOfChainsAndCA[chainKey].ToArray();
 
             //foreach (Vector3 wektor in aCarbons)
             //{ print(wektor); }
             GameObject backbone = (GameObject)Instantiate(cartoonLinePrefab, aCarbons[0], Quaternion.identity);
             LineRenderer cartoonLine = backbone.GetComponent<LineRenderer>();
-            Vector3[] aCarbonsNew = CurvesSmoother.MakeSmoothCurve(aCarbons, 3.0f);
+            Vector3[] aCarbonsNew = CurvesSmoother.MakeSmoothCurve(aCarbons, 1.0f);
             cartoonLine.SetVertexCount(aCarbonsNew.Length);
             cartoonLine.SetPositions(aCarbonsNew);
             cartoonLine.SetWidth(0.2f, 0.2f);
 
-            aCarbonsList.Clear();
+            
         }
+        
+        
         
 
 
