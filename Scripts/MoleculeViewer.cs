@@ -52,7 +52,8 @@ public class MoleculeViewer : MonoBehaviour
             }
 
             //creating dictionary of subunits and respective colours for subunits coloring method
-            else if ((MainMenu.colouring == "Subunits") && (line.Substring(0, 6).Trim() == "COMPND")
+            else if ((MainMenu.colouring == "Subunits" || MainMenu.representationStyle == "Cartoon") 
+                && (line.Substring(0, 6).Trim() == "COMPND")
                 && (line.Contains("CHAIN:")))
             {
 
@@ -60,6 +61,7 @@ public class MoleculeViewer : MonoBehaviour
                 print(chains);
             
             }
+
             //creating dictionary of residues and respective colours for residue coloring method
             else if ((MainMenu.colouring == "Residues") && (line.Substring(0, 6).Trim() == "SEQRES"))
 
@@ -373,29 +375,37 @@ public class MoleculeViewer : MonoBehaviour
 
     void CartoonRepresentation(List<AtomParser> listOfAtoms) 
     {
+        chains = chains.Remove(chains.Length - 1);
         List<Vector3> aCarbonsList = new List<Vector3>();
-       
-        foreach (AtomParser thisAtom in listOfAtoms)
+        foreach (string chain in chains.Split(','))
         {
 
-            if (thisAtom.GetAtomName() == "CA")
+            foreach (AtomParser thisAtom in listOfAtoms)
             {
-                aCarbonsList.Add(thisAtom.GetAtomPosition());
+
+                if (thisAtom.GetAtomName() == "CA" && thisAtom.GetChainID() == chain)
+                {
+                    
+                    aCarbonsList.Add(thisAtom.GetAtomPosition());
+                }
+                print("łańcuch: " + chain + " chainIDatomu: " + thisAtom.GetChainID());
+
+
             }
-            
+            Vector3[] aCarbons = aCarbonsList.ToArray();
 
+            //foreach (Vector3 wektor in aCarbons)
+            //{ print(wektor); }
+            GameObject backbone = (GameObject)Instantiate(cartoonLinePrefab, aCarbons[0], Quaternion.identity);
+            LineRenderer cartoonLine = backbone.GetComponent<LineRenderer>();
+            Vector3[] aCarbonsNew = CurvesSmoother.MakeSmoothCurve(aCarbons, 3.0f);
+            cartoonLine.SetVertexCount(aCarbonsNew.Length);
+            cartoonLine.SetPositions(aCarbonsNew);
+            cartoonLine.SetWidth(0.2f, 0.2f);
 
+            aCarbonsList.Clear();
         }
-        Vector3[] aCarbons = aCarbonsList.ToArray();
         
-        foreach (Vector3 wektor in aCarbons)
-        { print(wektor); }
-        GameObject backbone = (GameObject)Instantiate(cartoonLinePrefab, aCarbons[0], Quaternion.identity);
-        LineRenderer cartoonLine = backbone.GetComponent<LineRenderer>();
-        aCarbons = CurvesSmoother.MakeSmoothCurve(aCarbons, 3.0f);
-        cartoonLine.SetVertexCount(aCarbons.Length);
-        cartoonLine.SetPositions(aCarbons);
-        cartoonLine.SetWidth(0.2f, 0.2f);
 
 
 
