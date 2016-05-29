@@ -10,15 +10,19 @@ public class MoleculeViewer : MonoBehaviour
 {
     public GameObject atomPrefab;
     public GameObject bondPrefab;
+    public GameObject cartoonLinePrefab;
     public Vector3 target = new Vector3(0, 0, 0); //geometric center of molecule
     bool rotating = true; //initial rotating
     bool hasHydrogens = false;
-    Dictionary<string, Color> chainColorDicitonary = new Dictionary<string, Color>();
+    Dictionary<string, Color> chainColorDictionary = new Dictionary<string, Color>();
+    Dictionary<string, Color> residueColorDictionary = new Dictionary<string, Color>();
     List<AtomParser> listOfAtoms = new List<AtomParser>();
     List<List<int>> listOfConectPairs = new List<List<int>>();
     int numberOfConects;
     int numberOfChains;
     int numberOfAtoms; //number of atoms and heteroatoms
+    string chains; 
+    string residues;
 
     //initialization
     void Start()
@@ -30,6 +34,7 @@ public class MoleculeViewer : MonoBehaviour
         StreamReader file = new StreamReader(client.OpenRead("http://files.rcsb.org/download/" + MainMenu.pdbID + ".pdb"));
 
         Vector3 sumOfPositions = new Vector3();
+       
         while (!file.EndOfStream)
         {
             string line = file.ReadLine();
@@ -51,25 +56,27 @@ public class MoleculeViewer : MonoBehaviour
                 && (line.Contains("CHAIN:")))
             {
 
-                string chains = line.Substring(18, 60).Trim().Trim(';').Replace(" ", "");
+                chains = chains + line.Substring(18, 60).Trim().Trim(';').Replace(" ", "") + ",";
                 print(chains);
+            
+            }
+            //creating dictionary of residues and respective colours for residue coloring method
+            else if ((MainMenu.colouring == "Residues") && (line.Substring(0, 6).Trim() == "SEQRES"))
 
-                foreach (string chain in chains.Split(','))
-                {
-                    chainColorDicitonary.Add(chain, new Color(UnityEngine.Random.Range(0.0f, 1.0f), UnityEngine.Random.Range(0.0f, 1.0f), UnityEngine.Random.Range(0.0f, 1.0f)));
-                }
+            {
+                residues = residues + line.Substring(19, 51).Trim() + " ";
+                print(residues);  
 
             }
 
-
-            else if (line.Substring(0, 6).Trim() == "CONECT") //counting number of bonds assigned in CONECT section
+            else if (MainMenu.representationStyle == "Lines" && line.Substring(0, 6).Trim() == "CONECT") //counting number of bonds assigned in CONECT section
             {
                 if (line.Substring(11, 5).Trim() != ""
                     && Int32.Parse(line.Substring(11, 5).Trim()) > Int32.Parse(line.Substring(6, 5).Trim())
                     && Int32.Parse(line.Substring(11, 5).Trim()) != 0)
                 {
                     listOfConectPairs.Add
-                        (new List<int> { Int32.Parse(line.Substring(6, 5).Trim()), Int32.Parse(line.Substring(11, 5).Trim())});
+                        (new List<int> { Int32.Parse(line.Substring(6, 5).Trim()), Int32.Parse(line.Substring(11, 5).Trim()) });
                     numberOfConects++;
                 }
                 if (line.Substring(16, 5).Trim() != ""
@@ -100,22 +107,73 @@ public class MoleculeViewer : MonoBehaviour
 
 
         }
-        print(numberOfConects);
-        foreach (List<int> para in listOfConectPairs)
-        {
-            print(para[0] + ", " + para[1]);
-        }
+ 
         file.Close();
-        numberOfChains = chainColorDicitonary.Keys.Count;
+        numberOfChains = chainColorDictionary.Keys.Count;
         numberOfAtoms = listOfAtoms.Count;
         target = sumOfPositions / numberOfAtoms;
         transform.position = target - new Vector3(0, 0, 50);
         transform.LookAt(target);
+
+        switch (MainMenu.colouring)
+        {
+            case ("Subunits"):
+                PrepareForSubunitsColouring();
+                break;
+
+            case ("Residues"):
+                PrepareForResiduesColouring();
+                break;
+        }
+       
         Draw(listOfAtoms);
     }
 
 
+    void PrepareForSubunitsColouring()
+    {
+        
+            foreach (string chain in chains.Split(','))
+        {
+            if (!chainColorDictionary.ContainsKey(chain))
+            {
+                chainColorDictionary.Add(chain, new Color(UnityEngine.Random.Range(0.0f, 1.0f), UnityEngine.Random.Range(0.0f, 1.0f), UnityEngine.Random.Range(0.0f, 1.0f)));
+            }
+        }
+    }
 
+    void PrepareForResiduesColouring()
+    {
+        residueColorDictionary.Add("ALA", new Color32(200, 200, 200, 1));
+        residueColorDictionary.Add("ASN", new Color32(0, 220, 220, 1));
+        residueColorDictionary.Add("ASP", new Color32(230, 10, 10, 1));
+        residueColorDictionary.Add("ARG", new Color32(20, 90, 255, 1));
+        residueColorDictionary.Add("CYS", new Color32(230, 230, 0, 1));
+        residueColorDictionary.Add("GLN", new Color32(0, 220, 220, 1));
+        residueColorDictionary.Add("GLU", new Color32(230, 10, 10, 1));
+        residueColorDictionary.Add("GLY", new Color32(235, 235, 235, 1));
+        residueColorDictionary.Add("HIS", new Color32(130, 130, 210, 1));
+        residueColorDictionary.Add("ILE", new Color32(15, 130, 15, 1));
+        residueColorDictionary.Add("LEU", new Color32(15, 130, 15, 1));
+        residueColorDictionary.Add("LYS", new Color32(20, 90, 255, 1));
+        residueColorDictionary.Add("MET", new Color32(230, 230, 0, 1));
+        residueColorDictionary.Add("PHE", new Color32(50, 50, 170, 1));
+        residueColorDictionary.Add("PRO", new Color32(220, 150, 130, 1));
+        residueColorDictionary.Add("SER", new Color32(250, 150, 0, 1));
+        residueColorDictionary.Add("THR", new Color32(250, 150, 0, 1));
+        residueColorDictionary.Add("TYR", new Color32(50, 50, 170, 1));
+        residueColorDictionary.Add("TRP", new Color32(180, 90, 180, 1));
+        residueColorDictionary.Add("VAL", new Color32(15, 130, 15, 1));
+        residueColorDictionary.Add("HOH", Color.red);
+
+        foreach (string residue in residues.Split(' '))
+        {
+            if (!residueColorDictionary.ContainsKey(residue))
+            {
+                residueColorDictionary.Add(residue, new Color(UnityEngine.Random.Range(0.0f, 1.0f), UnityEngine.Random.Range(0.0f, 1.0f), UnityEngine.Random.Range(0.0f, 1.0f)));
+            }
+        }
+    }
 
 
     void Draw(List<AtomParser> listOfAtoms)
@@ -127,6 +185,10 @@ public class MoleculeViewer : MonoBehaviour
         else if (MainMenu.representationStyle == "Lines")
         {
             LinesRepresentation(listOfAtoms);
+        }
+        else if (MainMenu.representationStyle == "Cartoon")
+        {
+            CartoonRepresentation(listOfAtoms);
         }
     }
 
@@ -227,7 +289,7 @@ public class MoleculeViewer : MonoBehaviour
         }
     }
 
-    void LinesRepresentation(List<AtomParser> listOfAtoms)
+    void LinesRepresentation(List<AtomParser> listOfAtoms) //https://www.umass.edu/microbio/rasmol/rasbonds.htm
     {
         if (numberOfAtoms - numberOfChains > numberOfConects)
         {
@@ -237,12 +299,13 @@ public class MoleculeViewer : MonoBehaviour
                 {
                     foreach (AtomParser thisAtom2 in listOfAtoms)
                     {
-                        if (((thisAtom1.GetElementType() != "H" || thisAtom2.GetElementType() != "H")
+                        if (((thisAtom1.GetElementType() != "H" && thisAtom2.GetElementType() != "H")
                             && Vector3.Distance(thisAtom1.GetAtomPosition(), thisAtom2.GetAtomPosition()) >= 0.4f
-                            && Vector3.Distance(thisAtom1.GetAtomPosition(), thisAtom2.GetAtomPosition()) <= 1.9f) ||
-                            ((thisAtom1.GetElementType() == "H" || thisAtom2.GetElementType() == "H")
+                            && Vector3.Distance(thisAtom1.GetAtomPosition(), thisAtom2.GetAtomPosition()) <= 1.9f)
+                            || (!MainMenu.hideHydrogens
+                            && ((thisAtom1.GetElementType() == "H" || thisAtom2.GetElementType() == "H")
                             && Vector3.Distance(thisAtom1.GetAtomPosition(), thisAtom2.GetAtomPosition()) >= 0.4f
-                            && Vector3.Distance(thisAtom1.GetAtomPosition(), thisAtom2.GetAtomPosition()) <= 1.2f))
+                            && Vector3.Distance(thisAtom1.GetAtomPosition(), thisAtom2.GetAtomPosition()) <= 1.2f)))
                         {
                             DrawLines(thisAtom1, thisAtom2);
                         }
@@ -257,7 +320,10 @@ public class MoleculeViewer : MonoBehaviour
                 {
                     foreach (AtomParser thisAtom2 in listOfAtoms)
                     {
-                        if (Vector3.Distance(thisAtom1.GetAtomPosition(), thisAtom2.GetAtomPosition()) >= 0.4f
+                        if (((!MainMenu.hideHydrogens) ||
+                            (MainMenu.hideHydrogens &&
+                            (thisAtom1.GetElementType() != "H" || thisAtom2.GetElementType() != "H")))
+                            && Vector3.Distance(thisAtom1.GetAtomPosition(), thisAtom2.GetAtomPosition()) >= 0.4f
                             && Vector3.Distance(thisAtom1.GetAtomPosition(), thisAtom2.GetAtomPosition()) <= (thisAtom1.GetCovalentRadii() + thisAtom2.GetCovalentRadii() + 0.56))
                         {
                             DrawLines(thisAtom1, thisAtom2);
@@ -273,7 +339,13 @@ public class MoleculeViewer : MonoBehaviour
         {
             foreach (List<int> pairOfAtoms in listOfConectPairs)
             {
-                DrawLines(listOfAtoms[pairOfAtoms[0]], listOfAtoms[pairOfAtoms[1]]);
+                if ((!MainMenu.hideHydrogens) ||
+                    (MainMenu.hideHydrogens &&
+                    (listOfAtoms[pairOfAtoms[0]].GetElementType() != "H"
+                    || listOfAtoms[pairOfAtoms[1]].GetElementType() != "H")))
+                {
+                    DrawLines(listOfAtoms[pairOfAtoms[0]], listOfAtoms[pairOfAtoms[1]]);
+                }
             }
         }
     }
@@ -297,6 +369,37 @@ public class MoleculeViewer : MonoBehaviour
         {
             SubunitsColouring(thisAtom1, bond);
         }
+    }
+
+    void CartoonRepresentation(List<AtomParser> listOfAtoms) 
+    {
+        List<Vector3> aCarbonsList = new List<Vector3>();
+       
+        foreach (AtomParser thisAtom in listOfAtoms)
+        {
+
+            if (thisAtom.GetAtomName() == "CA")
+            {
+                aCarbonsList.Add(thisAtom.GetAtomPosition());
+            }
+            
+
+
+        }
+        Vector3[] aCarbons = aCarbonsList.ToArray();
+        
+        foreach (Vector3 wektor in aCarbons)
+        { print(wektor); }
+        GameObject backbone = (GameObject)Instantiate(cartoonLinePrefab, aCarbons[0], Quaternion.identity);
+        LineRenderer cartoonLine = backbone.GetComponent<LineRenderer>();
+        aCarbons = CurvesSmoother.MakeSmoothCurve(aCarbons, 3.0f);
+        cartoonLine.SetVertexCount(aCarbons.Length);
+        cartoonLine.SetPositions(aCarbons);
+        cartoonLine.SetWidth(0.2f, 0.2f);
+
+
+
+
     }
 
 
@@ -341,7 +444,7 @@ public class MoleculeViewer : MonoBehaviour
     void SubunitsColouring(AtomParser thisAtom, GameObject thingToColour)
     {
 
-        thingToColour.GetComponent<Renderer>().material.color = chainColorDicitonary[thisAtom.GetChainID()];
+        thingToColour.GetComponent<Renderer>().material.color = chainColorDictionary[thisAtom.GetChainID()];
 
     }
 
@@ -349,71 +452,7 @@ public class MoleculeViewer : MonoBehaviour
     {
         //http://life.nthu.edu.tw/~fmhsu/rasframe/COLORS.HTM
 
-        print(thisAtom.GetResidueName());
-        switch (thisAtom.GetResidueName())
-        {
-            case "ALA":
-                thingToColour.GetComponent<Renderer>().material.color = new Color32(200, 200, 200, 1);
-                break;
-            case "ASN":
-                thingToColour.GetComponent<Renderer>().material.color = new Color32(0, 220, 220, 1);
-                break;
-            case "ASP":
-                thingToColour.GetComponent<Renderer>().material.color = new Color32(230, 10, 10, 1);
-                break;
-            case "ARG":
-                thingToColour.GetComponent<Renderer>().material.color = new Color32(20, 90, 255, 1);
-                break;
-            case "CYS":
-                thingToColour.GetComponent<Renderer>().material.color = new Color32(230, 230, 0, 1);
-                break;
-            case "GLN":
-                thingToColour.GetComponent<Renderer>().material.color = new Color32(0, 220, 220, 1);
-                break;
-            case "GLU":
-                thingToColour.GetComponent<Renderer>().material.color = new Color32(230, 10, 10, 1);
-                break;
-            case "GLY":
-                thingToColour.GetComponent<Renderer>().material.color = new Color32(235, 235, 235, 1);
-                break;
-            case "HIS":
-                thingToColour.GetComponent<Renderer>().material.color = new Color32(130, 130, 210, 1);
-                break;
-            case "ILE":
-                thingToColour.GetComponent<Renderer>().material.color = new Color32(15, 130, 15, 1);
-                break;
-            case "LEU":
-                thingToColour.GetComponent<Renderer>().material.color = new Color32(15, 130, 15, 1);
-                break;
-            case "LYS":
-                thingToColour.GetComponent<Renderer>().material.color = new Color32(20, 90, 255, 1);
-                break;
-            case "MET":
-                thingToColour.GetComponent<Renderer>().material.color = new Color32(230, 230, 0, 1);
-                break;
-            case "PHE":
-                thingToColour.GetComponent<Renderer>().material.color = new Color32(50, 50, 170, 1);
-                break;
-            case "PRO":
-                thingToColour.GetComponent<Renderer>().material.color = new Color32(220, 150, 130, 1);
-                break;
-            case "SER":
-                thingToColour.GetComponent<Renderer>().material.color = new Color32(250, 150, 0, 1);
-                break;
-            case "THR":
-                thingToColour.GetComponent<Renderer>().material.color = new Color32(250, 150, 0, 1);
-                break;
-            case "TYR":
-                thingToColour.GetComponent<Renderer>().material.color = new Color32(50, 50, 170, 1);
-                break;
-            case "TRP":
-                thingToColour.GetComponent<Renderer>().material.color = new Color32(180, 90, 180, 1);
-                break;
-            case "VAL":
-                thingToColour.GetComponent<Renderer>().material.color = new Color32(15, 130, 15, 1);
-                break;
-
-        }
+        thingToColour.GetComponent<Renderer>().material.color = residueColorDictionary[thisAtom.GetResidueName()];
 
     }
 

@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System.Net;
@@ -40,7 +41,19 @@ public class MainMenu : MonoBehaviour
         pdbID = pdbInputField.text;
 
         HideHydrogensFunction();
+
         representationStyle = GetDropdownValue(representationDropdown);
+        if (representationStyle == "Van der Waals")
+        {
+            colouringDropdown.ClearOptions();
+            colouringDropdown.AddOptions(new List<string> { "CPK", "Residues", "Subunits" });
+        }
+        else
+        {
+            colouringDropdown.ClearOptions();
+            colouringDropdown.AddOptions(new List<string> {"Residues", "Subunits" });
+        }
+
         colouring = GetDropdownValue(colouringDropdown);
 
 
