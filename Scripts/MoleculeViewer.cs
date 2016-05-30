@@ -11,6 +11,7 @@ public class MoleculeViewer : MonoBehaviour
     public GameObject atomPrefab;
     public GameObject bondPrefab;
     public GameObject cartoonLinePrefab;
+    public GameObject cylinderPrefab;
     public Vector3 target = new Vector3(0, 0, 0); //geometric center of molecule
     bool rotating = true; //initial rotating
     bool hasHydrogens = false;
@@ -21,8 +22,9 @@ public class MoleculeViewer : MonoBehaviour
     int numberOfConects;
     int numberOfChains;
     int numberOfAtoms; //number of atoms and heteroatoms
-    string chains; 
+    string chains;
     string residues;
+    
 
     //initialization
     void Start()
@@ -34,7 +36,7 @@ public class MoleculeViewer : MonoBehaviour
         StreamReader file = new StreamReader(client.OpenRead("http://files.rcsb.org/download/" + MainMenu.pdbID + ".pdb"));
 
         Vector3 sumOfPositions = new Vector3();
-       
+
         while (!file.EndOfStream)
         {
             string line = file.ReadLine();
@@ -52,14 +54,14 @@ public class MoleculeViewer : MonoBehaviour
             }
 
             //creating dictionary of subunits and respective colours for subunits coloring method
-            else if ((MainMenu.colouring == "Subunits" || MainMenu.representationStyle == "Cartoon") 
+            else if (MainMenu.colouring == "Subunits"
                 && (line.Substring(0, 6).Trim() == "COMPND")
                 && (line.Contains("CHAIN:")))
             {
 
                 chains = chains + line.Substring(18, 60).Trim().Trim(';').Replace(" ", "") + ",";
                 print(chains);
-            
+
             }
 
             //creating dictionary of residues and respective colours for residue coloring method
@@ -67,7 +69,7 @@ public class MoleculeViewer : MonoBehaviour
 
             {
                 residues = residues + line.Substring(19, 51).Trim() + " ";
-                print(residues);  
+                print(residues);
 
             }
 
@@ -109,7 +111,7 @@ public class MoleculeViewer : MonoBehaviour
 
 
         }
- 
+
         file.Close();
         numberOfChains = chainColorDictionary.Keys.Count;
         numberOfAtoms = listOfAtoms.Count;
@@ -127,15 +129,15 @@ public class MoleculeViewer : MonoBehaviour
                 PrepareForResiduesColouring();
                 break;
         }
-       
+
         Draw(listOfAtoms);
     }
 
 
     void PrepareForSubunitsColouring()
     {
-        
-            foreach (string chain in chains.Split(','))
+        chains = chains.Remove(chains.Length - 1);
+        foreach (string chain in chains.Split(','))
         {
             if (!chainColorDictionary.ContainsKey(chain))
             {
@@ -168,6 +170,7 @@ public class MoleculeViewer : MonoBehaviour
         residueColorDictionary.Add("VAL", new Color32(15, 130, 15, 1));
         residueColorDictionary.Add("HOH", Color.red);
 
+        residues = residues.Remove(residues.Length - 1);
         foreach (string residue in residues.Split(' '))
         {
             if (!residueColorDictionary.ContainsKey(residue))
@@ -375,54 +378,92 @@ public class MoleculeViewer : MonoBehaviour
 
     void CartoonRepresentation(List<AtomParser> listOfAtoms)
     {
-        Dictionary<string, List<Vector3>> dictionaryOfChainsAndCA = new Dictionary<string, List<Vector3>>();
-
+        Dictionary<string, List<Vector3>> dictionaryOfBackbone = new Dictionary<string, List<Vector3>>();
+        Dictionary<string, List<Vector3>> dictionaryOfNucleicBackbone = new Dictionary<string, List<Vector3>>();
 
         foreach (AtomParser thisAtom in listOfAtoms)
         {
 
-            if (thisAtom.GetAtomName() == "CA")
+            if (thisAtom.GetAtomName() == "CA" || thisAtom.GetAtomName() == "N")
             {
-                if (dictionaryOfChainsAndCA.ContainsKey(thisAtom.GetChainID()))
+                if (dictionaryOfBackbone.ContainsKey(thisAtom.GetChainID()))
                 {
-                    dictionaryOfChainsAndCA[thisAtom.GetChainID()].Add(thisAtom.GetAtomPosition());
+                    dictionaryOfBackbone[thisAtom.GetChainID()].Add(thisAtom.GetAtomPosition());
 
                 }
                 else
                 {
                     List<Vector3> listOfVectors = new List<Vector3>();
                     listOfVectors.Add(thisAtom.GetAtomPosition());
-                    dictionaryOfChainsAndCA.Add(thisAtom.GetChainID(), listOfVectors);
+                    dictionaryOfBackbone.Add(thisAtom.GetChainID(), listOfVectors);
                 }
+            }
+            else if (thisAtom.GetAtomName() == "P" || thisAtom.GetAtomName() == "O5'" || thisAtom.GetAtomName() == "O3'"
+                || thisAtom.GetAtomName() == "C5'" || thisAtom.GetAtomName() == "OP1'" || thisAtom.GetAtomName() == "OP2'")
+            {
+                if (dictionaryOfNucleicBackbone.ContainsKey(thisAtom.GetChainID()))
+                {
+                    dictionaryOfNucleicBackbone[thisAtom.GetChainID()].Add(thisAtom.GetAtomPosition());
 
+                }
+                else
+                {
+                    List<Vector3> listOfVectors = new List<Vector3>();
+                    listOfVectors.Add(thisAtom.GetAtomPosition());
+                    dictionaryOfNucleicBackbone.Add(thisAtom.GetChainID(), listOfVectors);
+                }
             }
 
 
 
         }
-        foreach(string chainKey in dictionaryOfChainsAndCA.Keys)
+
+        if (dictionaryOfBackbone.Count == 0)
         {
-            Vector3[] aCarbons = dictionaryOfChainsAndCA[chainKey].ToArray();
+            dictionaryOfBackbone = dictionaryOfNucleicBackbone;
+        }
+
+
+        foreach (string chainKey in dictionaryOfBackbone.Keys)
+        {
+            Vector3[] aCarbons = dictionaryOfBackbone[chainKey].ToArray();
 
             //foreach (Vector3 wektor in aCarbons)
             //{ print(wektor); }
             GameObject backbone = (GameObject)Instantiate(cartoonLinePrefab, aCarbons[0], Quaternion.identity);
             LineRenderer cartoonLine = backbone.GetComponent<LineRenderer>();
-            Vector3[] aCarbonsNew = CurvesSmoother.MakeSmoothCurve(aCarbons, 1.0f);
+            Vector3[] aCarbonsNew = CurvesSmoother.MakeSmoothCurve(aCarbons, 2.0f);
             cartoonLine.SetVertexCount(aCarbonsNew.Length);
             cartoonLine.SetPositions(aCarbonsNew);
-            cartoonLine.SetWidth(0.2f, 0.2f);
+            cartoonLine.SetWidth(0.5f, 0.5f);
 
-            
+
+            for (int i=0; i < aCarbonsNew.Length; i++)
+            {
+                
+                    GameObject cylinder = Instantiate(cylinderPrefab);
+
+                    cylinder.transform.localPosition = aCarbonsNew[i];
+
+                if (i < aCarbonsNew.Length-1)
+                {
+                    cylinder.transform.LookAt(aCarbonsNew[i + 1]);
+                    
+                }
+                else
+                {
+                    cylinder.transform.LookAt(aCarbonsNew[i-1]);
+                }
+                cylinder.transform.Rotate(90, 0, 0);
+
+
+
+            }            
+                
+            }
         }
-        
-        
-        
+    
 
-
-
-
-    }
 
 
     void CpkColouring(AtomParser thisAtom, GameObject atomBall)
