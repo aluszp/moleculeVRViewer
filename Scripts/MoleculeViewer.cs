@@ -11,7 +11,8 @@ public class MoleculeViewer : MonoBehaviour
     public GameObject atomPrefab;
     public GameObject bondPrefab;
     public GameObject cartoonLinePrefab;
-    public GameObject cylinderPrefab;
+    //public GameObject cylinderPrefab;
+    public GameObject pipePrefab;
     public Vector3 target = new Vector3(0, 0, 0); //geometric center of molecule
     bool rotating = true; //initial rotating
     bool hasHydrogens = false;
@@ -24,7 +25,12 @@ public class MoleculeViewer : MonoBehaviour
     int numberOfAtoms; //number of atoms and heteroatoms
     string chains;
     string residues;
-    
+
+
+    private Mesh mesh;
+    private Vector3[] vertices;
+    private int[] triangles;
+
 
     //initialization
     void Start()
@@ -437,6 +443,152 @@ public class MoleculeViewer : MonoBehaviour
             cartoonLine.SetPositions(aCarbonsNew);
             cartoonLine.SetWidth(0.5f, 0.5f);
 
+            PipeLine(aCarbonsNew, pipePrefab);
+        } }
+
+    void PipeLine(Vector3[] points, GameObject pipePrefab) {
+
+
+
+        GameObject pipe = (GameObject)Instantiate(pipePrefab, points[0], Quaternion.identity);
+
+        pipe.GetComponent<MeshFilter>().mesh = mesh = new Mesh();
+        mesh.name = "Pipe";
+        SetVertices(points);
+        SetTriangles(points);
+        mesh.RecalculateNormals();
+
+    }
+
+    private void SetVertices(Vector3[] points)
+    {
+
+        vertices = new Vector3[(10 * 4 * (points.Length)) + 22];
+        CreateFirstQuadRing(points);
+        int iDelta = 10 * 4;
+        for (int pointIndex = 2, i = iDelta; pointIndex < points.Length; pointIndex++, i += iDelta)
+        {
+            CreateQuadRing(points, pointIndex, i);
+        }
+        vertices[10 * 4 * (points.Length)] = points[0];
+        vertices[10 * 4 * (points.Length) + 1] = points[points.Length - 1];
+
+        float angleStep = (2f * Mathf.PI) / 10;
+        for (int angle = 0; angle < 10; angle++)
+        {
+            Vector3 beginningPoint = GetPointOfVertix(points[0], angle * angleStep);
+            vertices[(10 * 4 * (points.Length)) + 2 + angle] = beginningPoint;
+            Vector3 endingPoint = GetPointOfVertix(points[points.Length - 1], angle * angleStep);
+            vertices[(10 * 4 * (points.Length)) + 12 + angle] = endingPoint;
+        }
+
+
+        foreach (Vector3 vertix in vertices)
+        { print(vertix); }
+        mesh.vertices = vertices;
+    }
+
+    private void CreateFirstQuadRing(Vector3[] points)
+    {
+        float angleStep = (2f * Mathf.PI) / 10;
+
+
+        Vector3 vertexA = GetPointOfVertix(points[1], 0);
+        Vector3 vertexB = GetPointOfVertix(points[0], 0);
+
+        for (int angle = 1, i = 0; angle <= 10; angle++, i += 4)
+        {
+            vertices[i] = vertexA;
+            vertices[i + 1] = vertexA = GetPointOfVertix(points[1], angle * angleStep);
+            vertices[i + 2] = vertexB;
+            vertices[i + 3] = vertexB = GetPointOfVertix(points[0], angle * angleStep);
+        }
+
+    }
+
+
+
+    private void CreateQuadRing(Vector3[] points, int pointIndex, int i)
+    {
+
+        float angleStep = (2f * Mathf.PI) / 10;
+        int ringOffset = 10 * 4;
+
+
+        for (int angle = 0; angle <= 10; angle++, i += 4)
+        {
+            vertices[i] = GetPointOfVertix(points[pointIndex], angle * angleStep);
+            vertices[i + 1] = GetPointOfVertix(points[pointIndex], (angle + 1) * angleStep);
+            vertices[i + 2] = vertices[i - ringOffset];
+            vertices[i + 3] = vertices[i - ringOffset + 1];
+        }
+    }
+
+    private void SetTriangles(Vector3[] points)
+    {
+
+        triangles = new int[(10 * 6 * (points.Length)) + 60];
+        for (int t = 0, i = 0; t < triangles.Length - 60; t += 6, i += 4)
+        {
+            triangles[t] = i;
+            triangles[t + 1] = triangles[t + 4] = i + 1;
+            triangles[t + 2] = triangles[t + 3] = i + 2;
+            triangles[t + 5] = i + 3;
+        }
+
+        for (int ti = 0, vi = 2; ti < 30; ti += 3, vi++)
+        {
+            if (ti != 27)
+            {
+                triangles[(10 * 6 * (points.Length)) + ti] = (10 * 4 * (points.Length)) + vi;
+                triangles[(10 * 6 * (points.Length)) + ti + 1] = (10 * 4 * (points.Length)) + vi + 1;
+                triangles[(10 * 6 * (points.Length)) + ti + 2] = 10 * 4 * (points.Length);
+            }
+            else
+            {
+                triangles[(10 * 6 * (points.Length)) + ti] = (10 * 4 * (points.Length)) + vi;
+                triangles[(10 * 6 * (points.Length)) + ti + 1] = (10 * 4 * (points.Length)) + 2;
+                triangles[(10 * 6 * (points.Length)) + ti + 2] = 10 * 4 * (points.Length);
+            }
+        }
+
+        for (int ti = 0, vi = 12; ti < 30; ti += 3, vi++)
+        {
+            if (ti != 27)
+            {
+                triangles[(10 * 6 * (points.Length)) + 30 + ti + 1] = (10 * 4 * (points.Length)) + vi;
+                triangles[(10 * 6 * (points.Length)) + 30 + ti] = (10 * 4 * (points.Length)) + vi + 1;
+                triangles[(10 * 6 * (points.Length)) + 30 + ti + 2] = (10 * 4 * (points.Length)) + 1;
+            }
+            else
+            {
+                triangles[(10 * 6 * (points.Length)) + 30 + ti + 1] = (10 * 4 * (points.Length)) + vi;
+                triangles[(10 * 6 * (points.Length)) + 30 + ti] = (10 * 4 * (points.Length)) + 12;
+                triangles[(10 * 6 * (points.Length)) + 30 + ti + 2] = (10 * 4 * (points.Length)) + 1;
+            }
+        }
+
+
+
+
+
+        mesh.triangles = triangles;
+    } 
+
+        private Vector3 GetPointOfVertix(Vector3 point, float angle)
+        {
+            Vector3 p;
+            float radius = 0.2f;
+            p.x = point.x + radius * Mathf.Sin(angle);
+            p.y = point.y + radius * Mathf.Cos(angle);
+            p.z = point.z;
+            return p;
+        }
+
+    
+
+
+
             //GameObject helix = (GameObject)Instantiate(cartoonLinePrefab, aCarbons[0], Quaternion.identity);
             //LineRenderer helixLine = helix.GetComponent<LineRenderer>();
             //List<Vector3> listOfHelixPoints = new List<Vector3>();
@@ -458,30 +610,30 @@ public class MoleculeViewer : MonoBehaviour
     
 
 
-        for (int i = 0; i < aCarbonsNew.Length; i++)
-        {
+        //for (int i = 0; i < aCarbonsNew.Length; i++)
+        //{
 
-            GameObject cylinder = Instantiate(cylinderPrefab);
+        //    GameObject cylinder = Instantiate(cylinderPrefab);
 
-            cylinder.transform.localPosition = aCarbonsNew[i];
+        //    cylinder.transform.localPosition = aCarbonsNew[i];
 
-            if (i < aCarbonsNew.Length - 1)
-            {
-                cylinder.transform.LookAt(aCarbonsNew[i + 1]);
+        //    if (i < aCarbonsNew.Length - 1)
+        //    {
+        //        cylinder.transform.LookAt(aCarbonsNew[i + 1]);
 
-            }
-            else
-            {
-                cylinder.transform.LookAt(aCarbonsNew[i - 1]);
-            }
-            cylinder.transform.Rotate(90, 0, 0);
+        //    }
+        //    else
+        //    {
+        //        cylinder.transform.LookAt(aCarbonsNew[i - 1]);
+        //    }
+        //    cylinder.transform.Rotate(90, 0, 0);
 
 
 
-        }
+        //}
 
-    }
-}
+    
+
     
 
 
