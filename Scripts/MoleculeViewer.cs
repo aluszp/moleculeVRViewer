@@ -432,36 +432,56 @@ public class MoleculeViewer : MonoBehaviour
             //{ print(wektor); }
             GameObject backbone = (GameObject)Instantiate(cartoonLinePrefab, aCarbons[0], Quaternion.identity);
             LineRenderer cartoonLine = backbone.GetComponent<LineRenderer>();
-            Vector3[] aCarbonsNew = CurvesSmoother.MakeSmoothCurve(aCarbons, 2.0f);
+            Vector3[] aCarbonsNew = CurvesSmoother.MakeSmoothCurve(aCarbons, 4.0f);
             cartoonLine.SetVertexCount(aCarbonsNew.Length);
             cartoonLine.SetPositions(aCarbonsNew);
             cartoonLine.SetWidth(0.5f, 0.5f);
 
+            //GameObject helix = (GameObject)Instantiate(cartoonLinePrefab, aCarbons[0], Quaternion.identity);
+            //LineRenderer helixLine = helix.GetComponent<LineRenderer>();
+            //List<Vector3> listOfHelixPoints = new List<Vector3>();
 
-            for (int i=0; i < aCarbonsNew.Length; i++)
+            //for (int c=0; c<aCarbonsNew.Length-1; c++)
+            //{
+            //    float t = aCarbonsNew[c].z;
+            //    listOfHelixPoints.Add(new Vector3((float)(Math.Cos(t)), (float)(Math.Sin(t)), t));
+            //    Vector3 middleHelixPoint = Vector3.Lerp(aCarbonsNew[c], aCarbonsNew[c+1], 0.5f);
+            //    float u = middleHelixPoint.z;
+            //    listOfHelixPoints.Add(new Vector3((float)(Math.Cos(u)), (float)(Math.Sin(u)), u));
+            //}
+
+            //Vector3[] helixPoints = listOfHelixPoints.ToArray();
+            //helixLine.SetVertexCount(helixPoints.Length);
+            //helixLine.SetPositions(helixPoints);
+            //helixLine.SetWidth(0.5f, 0.5f);
+        
+    
+
+
+        for (int i = 0; i < aCarbonsNew.Length; i++)
+        {
+
+            GameObject cylinder = Instantiate(cylinderPrefab);
+
+            cylinder.transform.localPosition = aCarbonsNew[i];
+
+            if (i < aCarbonsNew.Length - 1)
             {
-                
-                    GameObject cylinder = Instantiate(cylinderPrefab);
+                cylinder.transform.LookAt(aCarbonsNew[i + 1]);
 
-                    cylinder.transform.localPosition = aCarbonsNew[i];
-
-                if (i < aCarbonsNew.Length-1)
-                {
-                    cylinder.transform.LookAt(aCarbonsNew[i + 1]);
-                    
-                }
-                else
-                {
-                    cylinder.transform.LookAt(aCarbonsNew[i-1]);
-                }
-                cylinder.transform.Rotate(90, 0, 0);
-
-
-
-            }            
-                
             }
+            else
+            {
+                cylinder.transform.LookAt(aCarbonsNew[i - 1]);
+            }
+            cylinder.transform.Rotate(90, 0, 0);
+
+
+
         }
+
+    }
+}
     
 
 
