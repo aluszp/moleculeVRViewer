@@ -11,7 +11,7 @@ public class MoleculeViewer : MonoBehaviour
     public GameObject atomPrefab;
     public GameObject bondPrefab;
     public GameObject cartoonLinePrefab;
-    public GameObject cylinderPrefab;
+    public GameObject pipePrefab;
     public Vector3 target = new Vector3(0, 0, 0); //geometric center of molecule
     bool rotating = true; //initial rotating
     bool hasHydrogens = false;
@@ -430,13 +430,17 @@ public class MoleculeViewer : MonoBehaviour
 
             //foreach (Vector3 wektor in aCarbons)
             //{ print(wektor); }
-            GameObject backbone = (GameObject)Instantiate(cartoonLinePrefab, aCarbons[0], Quaternion.identity);
-            LineRenderer cartoonLine = backbone.GetComponent<LineRenderer>();
-            Vector3[] aCarbonsNew = CurvesSmoother.MakeSmoothCurve(aCarbons, 4.0f);
-            cartoonLine.SetVertexCount(aCarbonsNew.Length);
-            cartoonLine.SetPositions(aCarbonsNew);
-            cartoonLine.SetWidth(0.5f, 0.5f);
+            //GameObject backbone = (GameObject)Instantiate(cartoonLinePrefab, aCarbons[0], Quaternion.identity);
+            //LineRenderer cartoonLine = backbone.GetComponent<LineRenderer>();
+            Vector3[] aCarbonsNew = CurvesSmoother.MakeSmoothCurve(aCarbons, 2.0f);
+            
+            
+            //cartoonLine.SetVertexCount(aCarbonsNew.Length);
+            //cartoonLine.SetPositions(aCarbonsNew);
+            //cartoonLine.SetWidth(0.5f, 0.5f);
 
+            //Vector3[] array = { new Vector3(0, 0, 0), new Vector3(0, 0, 2), new Vector3(0, 0, 4), new Vector3(0, 0, 6), new Vector3(0, 0, 8) };
+            PipeTheLine backbonePipe = new PipeTheLine(aCarbonsNew, pipePrefab);
 
 
             //GameObject helix = (GameObject)Instantiate(cartoonLinePrefab, aCarbons[0], Quaternion.identity);

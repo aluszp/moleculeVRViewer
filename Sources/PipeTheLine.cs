@@ -13,7 +13,7 @@ public class PipeTheLine : MonoBehaviour
 
     public PipeTheLine(Vector3[] pointsOfLine, GameObject pipePrefab)
     {
-        GameObject pipe = (GameObject)Instantiate(pipePrefab, pointsOfLine[0], Quaternion.identity);
+        GameObject pipe = (GameObject)Instantiate(pipePrefab, Vector3.zero, Quaternion.identity);
         points = pointsOfLine;
         pipe.GetComponent<MeshFilter>().mesh = mesh = new Mesh();
         mesh.name = "Pipe";
@@ -158,7 +158,7 @@ public class PipeTheLine : MonoBehaviour
     private Vector3 GetPointOfVertix(Vector3 point, float angle)
     {
         Vector3 p;
-        float radius = 0.2f;
+        float radius = 0.6f;
         p.x = point.x + radius * Mathf.Sin(angle);
         p.y = point.y + radius * Mathf.Cos(angle);
         p.z = point.z;
