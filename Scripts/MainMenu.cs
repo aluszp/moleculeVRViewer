@@ -43,7 +43,7 @@ public class MainMenu : MonoBehaviour
         HideHydrogensFunction();
 
         representationStyle = GetDropdownValue(representationDropdown);
-        if (representationStyle == "Van der Waals")
+        if (representationStyle == "Van der Waals" || representationStyle == "Balls and Sticks" || representationStyle == "Lines")
         {
             colouringDropdown.ClearOptions();
             colouringDropdown.AddOptions(new List<string> { "CPK", "Residues", "Subunits" });

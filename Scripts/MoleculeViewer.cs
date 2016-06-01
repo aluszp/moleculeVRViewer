@@ -10,20 +10,21 @@ public class MoleculeViewer : MonoBehaviour
 {
     public GameObject atomPrefab;
     public GameObject bondPrefab;
-    public GameObject cartoonLinePrefab;
+    //public GameObject cartoonLinePrefab;
     public GameObject pipePrefab;
     public Vector3 target = new Vector3(0, 0, 0); //geometric center of molecule
     bool rotating = true; //initial rotating
     bool hasHydrogens = false;
     Dictionary<string, Color> chainColorDictionary = new Dictionary<string, Color>();
     Dictionary<string, Color> residueColorDictionary = new Dictionary<string, Color>();
+    Dictionary<string, Color> atomColorDictionary = new Dictionary<string, Color>();
     List<AtomParser> listOfAtoms = new List<AtomParser>();
-    List<List<int>> listOfConectPairs = new List<List<int>>();
+    List<List<int>> listOfConectPairs = new List<List<int>>(); //pairs that are connected in CONECT section in pdb
     int numberOfConects;
     int numberOfChains;
     int numberOfAtoms; //number of atoms and heteroatoms
-    string chains;
-    string residues;
+    string chains; //for dictionaries
+    string residues; //for dictionaries
     
 
     //initialization
@@ -45,7 +46,7 @@ public class MoleculeViewer : MonoBehaviour
             {
                 AtomParser thisAtom = new AtomParser(line);
 
-                if (thisAtom.GetElementType() == "H") //important for VdW representation
+                if (thisAtom.GetElementType() == "H") //important for VdW and Balls&Sticks representation
                 {
                     hasHydrogens = true;
                 }
@@ -73,7 +74,8 @@ public class MoleculeViewer : MonoBehaviour
 
             }
 
-            else if (MainMenu.representationStyle == "Lines" && line.Substring(0, 6).Trim() == "CONECT") //counting number of bonds assigned in CONECT section
+            else if ((MainMenu.representationStyle == "Lines" || MainMenu.representationStyle == "Balls and Sticks")
+                && line.Substring(0, 6).Trim() == "CONECT") //counting number of bonds assigned in CONECT section
             {
                 if (line.Substring(11, 5).Trim() != ""
                     && Int32.Parse(line.Substring(11, 5).Trim()) > Int32.Parse(line.Substring(6, 5).Trim())
@@ -128,6 +130,10 @@ public class MoleculeViewer : MonoBehaviour
             case ("Residues"):
                 PrepareForResiduesColouring();
                 break;
+
+            case ("CPK"):
+                PrepareForCpkColouring();
+                break;
         }
 
         Draw(listOfAtoms);
@@ -180,12 +186,27 @@ public class MoleculeViewer : MonoBehaviour
         }
     }
 
+    void PrepareForCpkColouring()
+    {
+        atomColorDictionary.Add("H", Color.white);
+        atomColorDictionary.Add("C", Color.black);
+        atomColorDictionary.Add("N", Color.blue);
+        atomColorDictionary.Add("O", Color.red);
+        atomColorDictionary.Add("F", Color.green);
+        atomColorDictionary.Add("CL", Color.green);
+        atomColorDictionary.Add("P", new Color32(255, 153, 0, 1)); //orange
+        atomColorDictionary.Add("S", Color.yellow);
+        atomColorDictionary.Add("BR", new Color32(153, 0, 0, 1));//dark red
+        atomColorDictionary.Add("MG", new Color32(0, 102, 0, 1)); //dark green
+        
+    }
+
 
     void Draw(List<AtomParser> listOfAtoms)
     {
         if (MainMenu.representationStyle == "Van der Waals")
         {
-            VdwRepresentation(listOfAtoms);
+            VdwRepresentation(listOfAtoms, 2f);
         }
         else if (MainMenu.representationStyle == "Lines")
         {
@@ -195,9 +216,14 @@ public class MoleculeViewer : MonoBehaviour
         {
             CartoonRepresentation(listOfAtoms);
         }
+        else if (MainMenu.representationStyle == "Balls and Sticks")
+        {
+            VdwRepresentation(listOfAtoms, 0.6f);
+            LinesRepresentation(listOfAtoms);
+        }
     }
 
-    void VdwRepresentation(List<AtomParser> listOfAtoms)
+    void VdwRepresentation(List<AtomParser> listOfAtoms, float radiusMultiplier)
     {
         foreach (AtomParser thisAtom in listOfAtoms)
         {
@@ -209,31 +235,31 @@ public class MoleculeViewer : MonoBehaviour
                 switch (thisAtom.GetElementType())
                 {
                     case "F":
-                        atomBall.transform.localScale = new Vector3(1.47f, 1.47f, 1.47f) * 2;
+                        atomBall.transform.localScale = new Vector3(1.47f, 1.47f, 1.47f) * radiusMultiplier;
                         break;
                     case "CL":
-                        atomBall.transform.localScale = new Vector3(1.75f, 1.75f, 1.75f) * 2;
+                        atomBall.transform.localScale = new Vector3(1.75f, 1.75f, 1.75f) * radiusMultiplier;
                         break;
                     case "P":
-                        atomBall.transform.localScale = new Vector3(1.880f, 1.880f, 1.880f) * 2;
+                        atomBall.transform.localScale = new Vector3(1.880f, 1.880f, 1.880f) * radiusMultiplier;
                         break;
                     case "MG":
-                        atomBall.transform.localScale = new Vector3(1.73f, 1.73f, 1.73f) * 2;
+                        atomBall.transform.localScale = new Vector3(1.73f, 1.73f, 1.73f) * radiusMultiplier;
                         break;
                     case "CA":
-                        atomBall.transform.localScale = new Vector3(1.948f, 1.948f, 1.948f) * 2;
+                        atomBall.transform.localScale = new Vector3(1.948f, 1.948f, 1.948f) * radiusMultiplier;
                         break;
                     case "FE":
-                        atomBall.transform.localScale = new Vector3(1.948f, 1.948f, 1.948f) * 2;
+                        atomBall.transform.localScale = new Vector3(1.948f, 1.948f, 1.948f) * radiusMultiplier;
                         break;
                     case "ZN":
-                        atomBall.transform.localScale = new Vector3(1.148f, 1.148f, 1.148f) * 2;
+                        atomBall.transform.localScale = new Vector3(1.148f, 1.148f, 1.148f) * radiusMultiplier;
                         break;
                     case "CD":
-                        atomBall.transform.localScale = new Vector3(1.748f, 1.748f, 1.748f) * 2;
+                        atomBall.transform.localScale = new Vector3(1.748f, 1.748f, 1.748f) * radiusMultiplier;
                         break;
                     case "I":
-                        atomBall.transform.localScale = new Vector3(1.748f, 1.748f, 1.748f) * 2;
+                        atomBall.transform.localScale = new Vector3(1.748f, 1.748f, 1.748f) * radiusMultiplier;
                         break;
 
                 }
@@ -242,16 +268,16 @@ public class MoleculeViewer : MonoBehaviour
                     switch (thisAtom.GetElementType())
                     {
                         case "C":
-                            atomBall.transform.localScale = new Vector3(1.872f, 1.872f, 1.872f) * 2;
+                            atomBall.transform.localScale = new Vector3(1.872f, 1.872f, 1.872f) * radiusMultiplier;
                             break;
                         case "N":
-                            atomBall.transform.localScale = new Vector3(1.507f, 1.507f, 1.507f) * 2;
+                            atomBall.transform.localScale = new Vector3(1.507f, 1.507f, 1.507f) * radiusMultiplier;
                             break;
                         case "O":
-                            atomBall.transform.localScale = new Vector3(1.4f, 1.4f, 1.4f) * 2;
+                            atomBall.transform.localScale = new Vector3(1.4f, 1.4f, 1.4f) * radiusMultiplier;
                             break;
                         case "S":
-                            atomBall.transform.localScale = new Vector3(1.848f, 1.848f, 1.848f) * 2;
+                            atomBall.transform.localScale = new Vector3(1.848f, 1.848f, 1.848f) * radiusMultiplier;
                             break;
 
                     }
@@ -261,19 +287,19 @@ public class MoleculeViewer : MonoBehaviour
                     switch (thisAtom.GetElementType())
                     {
                         case "H":
-                            atomBall.transform.localScale = new Vector3(1.1f, 1.1f, 1.1f) * 2;
+                            atomBall.transform.localScale = new Vector3(1.1f, 1.1f, 1.1f) * radiusMultiplier;
                             break;
                         case "C":
-                            atomBall.transform.localScale = new Vector3(1.548f, 1.548f, 1.548f) * 2;
+                            atomBall.transform.localScale = new Vector3(1.548f, 1.548f, 1.548f) * radiusMultiplier;
                             break;
                         case "N":
-                            atomBall.transform.localScale = new Vector3(1.4f, 1.4f, 1.4f) * 2;
+                            atomBall.transform.localScale = new Vector3(1.4f, 1.4f, 1.4f) * radiusMultiplier;
                             break;
                         case "O":
-                            atomBall.transform.localScale = new Vector3(1.348f, 1.348f, 1.348f) * 2;
+                            atomBall.transform.localScale = new Vector3(1.348f, 1.348f, 1.348f) * radiusMultiplier;
                             break;
                         case "S":
-                            atomBall.transform.localScale = new Vector3(1.808f, 1.808f, 1.808f) * 2;
+                            atomBall.transform.localScale = new Vector3(1.808f, 1.808f, 1.808f) * radiusMultiplier;
                             break;
                     }
                 }
@@ -373,6 +399,11 @@ public class MoleculeViewer : MonoBehaviour
         if (MainMenu.colouring == "Subunits" && thisAtom1.GetChainID() == thisAtom2.GetChainID())
         {
             SubunitsColouring(thisAtom1, bond);
+        }
+
+        if (MainMenu.colouring == "CPK")
+        {
+            CpkColouringForLines(thisAtom1, thisAtom2, bondLine);
         }
     }
 
@@ -494,40 +525,17 @@ public class MoleculeViewer : MonoBehaviour
 
     void CpkColouring(AtomParser thisAtom, GameObject atomBall)
     {
-        switch (thisAtom.GetElementType())
-        {
-            case "H":
-                atomBall.GetComponent<Renderer>().material.color = Color.white;
-                break;
-            case "C":
-                atomBall.GetComponent<Renderer>().material.color = Color.black;
-                break;
-            case "N":
-                atomBall.GetComponent<Renderer>().material.color = Color.blue;
-                break;
-            case "O":
-                atomBall.GetComponent<Renderer>().material.color = Color.red;
-                break;
-            case "F":
-                atomBall.GetComponent<Renderer>().material.color = Color.green;
-                break;
-            case "CL":
-                atomBall.GetComponent<Renderer>().material.color = Color.green;
-                break;
-            case "P":
-                atomBall.GetComponent<Renderer>().material.color = new Color32(255, 153, 0, 1); //orange
-                break;
-            case "S":
-                atomBall.GetComponent<Renderer>().material.color = Color.yellow;
-                break;
-            case "BR":
-                atomBall.GetComponent<Renderer>().material.color = new Color32(153, 0, 0, 1); //dark red
-                break;
-            case "MG":
-                atomBall.GetComponent<Renderer>().material.color = new Color32(0, 102, 0, 1); //dark green
-                break;
+        atomBall.GetComponent<Renderer>().material.color = atomColorDictionary[thisAtom.GetElementType()];
+        
+    }
 
-        }
+    void CpkColouringForLines(AtomParser thisAtom1, AtomParser thisAtom2, LineRenderer lineToColour)
+    {
+        Color colour1, colour2;
+        colour1 = atomColorDictionary[thisAtom1.GetElementType()];
+        colour2 = atomColorDictionary[thisAtom2.GetElementType()];
+        lineToColour.SetColors(colour1, colour2);
+        lineToColour.material = new Material(Shader.Find("Particles/Alpha Blended"));
     }
 
     void SubunitsColouring(AtomParser thisAtom, GameObject thingToColour)
