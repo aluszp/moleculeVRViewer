@@ -10,13 +10,17 @@ public class PipeTheLine : MonoBehaviour
     private Mesh mesh;
     private Vector3[] vertices;
     private int[] triangles;
+    float radiusX;
+    float radiusY;
 
-    public PipeTheLine(Vector3[] pointsOfLine, GameObject pipePrefab)
+    public PipeTheLine(Vector3[] pointsOfLine, GameObject pipePrefab, float givenRadiusX, float givenRadiusY)
     {
         GameObject pipe = (GameObject)Instantiate(pipePrefab, Vector3.zero, Quaternion.identity);
         points = pointsOfLine;
         pipe.GetComponent<MeshFilter>().mesh = mesh = new Mesh();
         mesh.name = "Pipe";
+        radiusX = givenRadiusX;
+        radiusY = givenRadiusY;
         SetVertices();
         SetTriangles();
         mesh.RecalculateNormals();
@@ -158,9 +162,9 @@ public class PipeTheLine : MonoBehaviour
     private Vector3 GetPointOfVertix(Vector3 point, float angle)
     {
         Vector3 p;
-        float radius = 0.6f;
-        p.x = point.x + radius * Mathf.Sin(angle);
-        p.y = point.y + radius * Mathf.Cos(angle);
+
+        p.x = point.x + radiusX * Mathf.Sin(angle);
+        p.y = point.y + radiusY * Mathf.Cos(angle);
         p.z = point.z;
         return p;
     }

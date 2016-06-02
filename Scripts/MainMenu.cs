@@ -51,7 +51,7 @@ public class MainMenu : MonoBehaviour
         else
         {
             colouringDropdown.ClearOptions();
-            colouringDropdown.AddOptions(new List<string> {"Residues", "Subunits" });
+            colouringDropdown.AddOptions(new List<string> {"Subunits" });
         }
 
         colouring = GetDropdownValue(colouringDropdown);
