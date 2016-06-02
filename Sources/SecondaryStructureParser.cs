@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Assets.Code.Sources
 {
-    class SecondaryStructureParser
+    public class SecondaryStructureParser
     {
         string typeOfStructure;
         int startingResidue, endingResidue;

@@ -1,20 +1,16 @@
 ﻿using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System.Net;
-using System.IO;
-using System;
+using Assets.Code.Sources;
+
 
 
 public class MainMenu : MonoBehaviour
 {
-    //public Texture2D menuBackground;
-    public static string pdbID; //or PlayerPrefs?
-    public static bool hideHydrogens = false;
-    public static string representationStyle;
-    public static string colouring;
+
+
 
     public InputField pdbInputField;
     public Button startButton;
@@ -34,27 +30,29 @@ public class MainMenu : MonoBehaviour
     //  once per frame
     void Update()
     {
-        if (pdbID != pdbInputField.text)
+        if (Configurator.GetPdbID() != pdbInputField.text)
         {
             errorText.text = ""; //clear error message if user starts changing the PDB ID
         }
-        pdbID = pdbInputField.text;
+        Configurator.SetPdbID(pdbInputField.text);
 
         HideHydrogensFunction();
 
-        representationStyle = GetDropdownValue(representationDropdown);
-        if (representationStyle == "Van der Waals" || representationStyle == "Balls and Sticks" || representationStyle == "Lines")
+        Configurator.SetRepresentationStyle(GetDropdownValue(representationDropdown));
+        if (Configurator.GetRepresentationStyle() == RepresentationStyles.vanDerWaals 
+            || Configurator.GetRepresentationStyle() == RepresentationStyles.ballsAndSticks
+            || Configurator.GetRepresentationStyle() == RepresentationStyles.lines)
         {
             colouringDropdown.ClearOptions();
-            colouringDropdown.AddOptions(new List<string> { "CPK", "Residues", "Subunits" });
+            colouringDropdown.AddOptions(new List<string> { Colouring.cpk, Colouring.residues, Colouring.subunits });
         }
         else
         {
             colouringDropdown.ClearOptions();
-            colouringDropdown.AddOptions(new List<string> {"Subunits" });
+            colouringDropdown.AddOptions(new List<string> { Colouring.subunits });
         }
 
-        colouring = GetDropdownValue(colouringDropdown);
+        Configurator.SetColouring(GetDropdownValue(colouringDropdown));
 
 
     }
@@ -62,9 +60,9 @@ public class MainMenu : MonoBehaviour
     void ButtonFunction()
     {
 
-        if (pdbID.Length == 4)
+        if (Configurator.GetPdbID().Length == 4)
         {
-            if (CheckIfFileExist(pdbID))
+            if (CheckIfFileExist(Configurator.GetPdbID()))
             {
                 if (SceneManager.GetActiveScene().name != "MoleculeScene")
                 {
@@ -131,10 +129,10 @@ public class MainMenu : MonoBehaviour
     {
         if (hideHydrogensToggle.isOn)
         {
-            hideHydrogens = true;
+            Configurator.SetHideHydrogens(true);
         }
         else
-            hideHydrogens = false;
+            Configurator.SetHideHydrogens(false);
     }
 
 }

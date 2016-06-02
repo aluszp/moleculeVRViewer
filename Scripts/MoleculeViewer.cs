@@ -15,132 +15,71 @@ public class MoleculeViewer : MonoBehaviour
     public GameObject cylinderHelixPrefab;
     public GameObject arrowSheetPrefab;
 
-    Vector3 target = new Vector3(0, 0, 0); //geometric center of molecule
-    bool rotating = true; //initial rotating
-    bool hasHydrogens = false;
-    Dictionary<string, Color> chainColorDictionary = new Dictionary<string, Color>();
-    Dictionary<string, Color> residueColorDictionary = new Dictionary<string, Color>();
-    Dictionary<string, Color> atomColorDictionary = new Dictionary<string, Color>();
-    Dictionary<string, List<Vector3>> dictionaryOfBackbone = new Dictionary<string, List<Vector3>>();
-    Dictionary<string, List<Vector3>> dictionaryOfNucleicBackbone = new Dictionary<string, List<Vector3>>();
-    Dictionary<SecondaryStructureParser, List<Vector3>> dictionaryOfAlphaHelix =
-        new Dictionary<SecondaryStructureParser, List<Vector3>>();
-    Dictionary<SecondaryStructureParser, List<AtomParser>> dictionaryOfBetaSheet =
-new Dictionary<SecondaryStructureParser, List<AtomParser>>();
-    List<AtomParser> listOfAtoms = new List<AtomParser>();
-    List<List<int>> listOfConectPairs = new List<List<int>>(); //pairs that are connected in CONECT section in pdb
+    Vector3 target; //geometric center of molecule
+    bool rotating; //initial rotating
+
+    FileReader fileReader;
+
+    bool hasHydrogens;
+    Dictionary<string, Color> chainColorDictionary;
+    Dictionary<string, Color> residueColorDictionary;
+    Dictionary<string, Color> atomColorDictionary;
+    Dictionary<string, List<Vector3>> dictionaryOfBackbone;
+    Dictionary<string, List<Vector3>> dictionaryOfNucleicBackbone;
+    Dictionary<SecondaryStructureParser, List<Vector3>> dictionaryOfAlphaHelix;
+    Dictionary<SecondaryStructureParser, List<AtomParser>> dictionaryOfBetaSheet;
+    List<AtomParser> listOfAtoms;
+    List<List<int>> listOfConectPairs; //pairs that are connected in CONECT section in pdb
     int numberOfConects;
     int numberOfChains;
     int numberOfAtoms; //number of atoms and heteroatoms
     string chains; //for dictionaries
     string residues; //for dictionaries
-    WebClient client = new WebClient();
+  
+    Vector3 sumOfPositions;
 
     //initialization
     void Start()
     {
+        target = new Vector3(0, 0, 0);
+        rotating = true;
+        chainColorDictionary = new Dictionary<string, Color>();
+        residueColorDictionary = new Dictionary<string, Color>();
+        atomColorDictionary = new Dictionary<string, Color>();
+        dictionaryOfBackbone = new Dictionary<string, List<Vector3>>();
+        dictionaryOfNucleicBackbone = new Dictionary<string, List<Vector3>>();
+        dictionaryOfAlphaHelix = new Dictionary<SecondaryStructureParser, List<Vector3>>();
+        dictionaryOfBetaSheet = new Dictionary<SecondaryStructureParser, List<AtomParser>>();
 
+        //read file
+        fileReader = new FileReader();
+        fileReader.ReadFile();
 
+        hasHydrogens = fileReader.GetHasHydrogens();
+        listOfAtoms = fileReader.GetListOfAtoms();
+        sumOfPositions = fileReader.GetSumOfPositions();
+        chains = fileReader.GetChains();
+        numberOfConects = fileReader.GetNumberOfConects();
+        residues = fileReader.GetResidues();
+        listOfConectPairs = fileReader.GetListOfConectPairs();
 
-        //System.IO.StreamReader file = new System.IO.StreamReader(@"C:\Users\Dell 15z\Studia\NOWA PRACA MGR\4QRV.pdb");
-        StreamReader file = new StreamReader(client.OpenRead("http://files.rcsb.org/download/" + MainMenu.pdbID + ".pdb"));
-
-        Vector3 sumOfPositions = new Vector3();
-
-        while (!file.EndOfStream)
-        {
-            string line = file.ReadLine();
-
-            if (line.Substring(0, 6).Trim() == "ATOM" || line.Substring(0, 6).Trim() == "HETATM")
-            {
-                AtomParser thisAtom = new AtomParser(line);
-
-                if (thisAtom.GetElementType() == "H") //important for VdW and Balls&Sticks representation
-                {
-                    hasHydrogens = true;
-                }
-                listOfAtoms.Add(thisAtom);
-                sumOfPositions += thisAtom.GetAtomPosition();
-            }
-
-            //creating dictionary of subunits and respective colours for subunits coloring method
-            else if (MainMenu.colouring == "Subunits"
-                && (line.Substring(0, 6).Trim() == "COMPND")
-                && (line.Contains("CHAIN:")))
-            {
-
-                chains = chains + line.Substring(18, 60).Trim().Trim(';').Replace(" ", "") + ",";
-                print(chains);
-
-            }
-
-            //creating dictionary of residues and respective colours for residue coloring method
-            else if ((MainMenu.colouring == "Residues") && (line.Substring(0, 6).Trim() == "SEQRES"))
-
-            {
-                residues = residues + line.Substring(19, 51).Trim() + " ";
-                print(residues);
-
-            }
-
-            else if ((MainMenu.representationStyle == "Lines" || MainMenu.representationStyle == "Balls and Sticks")
-                && line.Substring(0, 6).Trim() == "CONECT") //counting number of bonds assigned in CONECT section
-            {
-                if (line.Substring(11, 5).Trim() != ""
-                    && Int32.Parse(line.Substring(11, 5).Trim()) > Int32.Parse(line.Substring(6, 5).Trim())
-                    && Int32.Parse(line.Substring(11, 5).Trim()) != 0)
-                {
-                    listOfConectPairs.Add
-                        (new List<int> { Int32.Parse(line.Substring(6, 5).Trim()), Int32.Parse(line.Substring(11, 5).Trim()) });
-                    numberOfConects++;
-                }
-                if (line.Substring(16, 5).Trim() != ""
-                    && Int32.Parse(line.Substring(16, 5).Trim()) > Int32.Parse(line.Substring(6, 5).Trim())
-                    && Int32.Parse(line.Substring(16, 5).Trim()) != 0)
-                {
-                    listOfConectPairs.Add
-                        (new List<int> { Int32.Parse(line.Substring(6, 5).Trim()), Int32.Parse(line.Substring(16, 5).Trim()) });
-                    numberOfConects++;
-                }
-                if (line.Substring(21, 5).Trim() != ""
-                    && Int32.Parse(line.Substring(21, 5).Trim()) > Int32.Parse(line.Substring(6, 5).Trim())
-                    && Int32.Parse(line.Substring(21, 5).Trim()) != 0)
-                {
-                    listOfConectPairs.Add
-                        (new List<int> { Int32.Parse(line.Substring(6, 5).Trim()), Int32.Parse(line.Substring(21, 5).Trim()) });
-                    numberOfConects++;
-                }
-                if (line.Substring(26, 5).Trim() != ""
-                    && Int32.Parse(line.Substring(26, 5).Trim()) > Int32.Parse(line.Substring(6, 5).Trim())
-                    && Int32.Parse(line.Substring(26, 5).Trim()) != 0)
-                {
-                    listOfConectPairs.Add
-                        (new List<int> { Int32.Parse(line.Substring(6, 5).Trim()), Int32.Parse(line.Substring(26, 5).Trim()) });
-                    numberOfConects++;
-                }
-            }
-
-
-        }
-
-        file.Close();
         numberOfChains = chainColorDictionary.Keys.Count;
         numberOfAtoms = listOfAtoms.Count;
         target = sumOfPositions / numberOfAtoms;
         transform.position = target - new Vector3(0, 0, 50);
         transform.LookAt(target);
 
-        switch (MainMenu.colouring)
+        switch (Configurator.GetColouring())
         {
-            case ("Subunits"):
+            case (Colouring.subunits):
                 PrepareForSubunitsColouring();
                 break;
 
-            case ("Residues"):
+            case (Colouring.residues):
                 PrepareForResiduesColouring();
                 break;
 
-            case ("CPK"):
+            case (Colouring.cpk):
                 PrepareForCpkColouring();
                 break;
         }
@@ -148,6 +87,7 @@ new Dictionary<SecondaryStructureParser, List<AtomParser>>();
         Draw(listOfAtoms);
     }
 
+    
 
     void PrepareForSubunitsColouring()
     {
@@ -213,23 +153,23 @@ new Dictionary<SecondaryStructureParser, List<AtomParser>>();
 
     void Draw(List<AtomParser> listOfAtoms)
     {
-        if (MainMenu.representationStyle == "Van der Waals")
+        if (Configurator.GetRepresentationStyle() == RepresentationStyles.vanDerWaals)
         {
             VdwRepresentation(listOfAtoms, 2f);
         }
-        else if (MainMenu.representationStyle == "Lines")
+        else if (Configurator.GetRepresentationStyle() == RepresentationStyles.lines)
         {
             LinesRepresentation(listOfAtoms);
         }
-        else if (MainMenu.representationStyle == "Backbone")
+        else if (Configurator.GetRepresentationStyle() == RepresentationStyles.backbone)
         {
             BackboneRepresentation(listOfAtoms);
         }
-        else if (MainMenu.representationStyle == "Old Ribbon")
+        else if (Configurator.GetRepresentationStyle() == RepresentationStyles.oldRibbon)
         {
             OldRibbonRepresentation(listOfAtoms);
         }
-        else if (MainMenu.representationStyle == "Balls and Sticks")
+        else if (Configurator.GetRepresentationStyle() == RepresentationStyles.ballsAndSticks)
         {
             VdwRepresentation(listOfAtoms, 0.6f);
             LinesRepresentation(listOfAtoms);
@@ -240,7 +180,7 @@ new Dictionary<SecondaryStructureParser, List<AtomParser>>();
     {
         foreach (AtomParser thisAtom in listOfAtoms)
         {
-            if ((!MainMenu.hideHydrogens) || (MainMenu.hideHydrogens && thisAtom.GetElementType() != "H"))
+            if ((!Configurator.GetHideHydrogens()) || (Configurator.GetHideHydrogens() && thisAtom.GetElementType() != "H"))
             {
 
                 GameObject atomBall = (GameObject)Instantiate(atomPrefab, thisAtom.GetAtomPosition(), Quaternion.identity);
@@ -276,7 +216,8 @@ new Dictionary<SecondaryStructureParser, List<AtomParser>>();
                         break;
 
                 }
-                if (MainMenu.hideHydrogens || !hasHydrogens)
+
+                if (Configurator.GetHideHydrogens() || !hasHydrogens)
                 {
                     switch (thisAtom.GetElementType())
                     {
@@ -295,7 +236,7 @@ new Dictionary<SecondaryStructureParser, List<AtomParser>>();
 
                     }
                 }
-                else if (!MainMenu.hideHydrogens && hasHydrogens)
+                else if (!Configurator.GetHideHydrogens() && hasHydrogens)
                 {
                     switch (thisAtom.GetElementType())
                     {
@@ -316,15 +257,15 @@ new Dictionary<SecondaryStructureParser, List<AtomParser>>();
                             break;
                     }
                 }
-                if (MainMenu.colouring == "CPK")
+                if (Configurator.GetColouring() == Colouring.cpk)
                 {
                     CpkColouring(thisAtom, atomBall);
                 }
-                else if (MainMenu.colouring == "Subunits")
+                else if (Configurator.GetColouring() == Colouring.subunits)
                 {
                     SubunitsColouring(thisAtom, atomBall);
                 }
-                else if (MainMenu.colouring == "Residues")
+                else if (Configurator.GetColouring() == Colouring.residues)
                 {
                     ResiduesColouring(thisAtom, atomBall);
                 }
@@ -346,7 +287,7 @@ new Dictionary<SecondaryStructureParser, List<AtomParser>>();
                         if (((thisAtom1.GetElementType() != "H" && thisAtom2.GetElementType() != "H")
                             && Vector3.Distance(thisAtom1.GetAtomPosition(), thisAtom2.GetAtomPosition()) >= 0.4f
                             && Vector3.Distance(thisAtom1.GetAtomPosition(), thisAtom2.GetAtomPosition()) <= 1.9f)
-                            || (!MainMenu.hideHydrogens
+                            || (!Configurator.GetHideHydrogens()
                             && ((thisAtom1.GetElementType() == "H" || thisAtom2.GetElementType() == "H")
                             && Vector3.Distance(thisAtom1.GetAtomPosition(), thisAtom2.GetAtomPosition()) >= 0.4f
                             && Vector3.Distance(thisAtom1.GetAtomPosition(), thisAtom2.GetAtomPosition()) <= 1.2f)))
@@ -364,8 +305,8 @@ new Dictionary<SecondaryStructureParser, List<AtomParser>>();
                 {
                     foreach (AtomParser thisAtom2 in listOfAtoms)
                     {
-                        if (((!MainMenu.hideHydrogens) ||
-                            (MainMenu.hideHydrogens &&
+                        if (((!Configurator.GetHideHydrogens()) ||
+                            (Configurator.GetHideHydrogens() &&
                             (thisAtom1.GetElementType() != "H" || thisAtom2.GetElementType() != "H")))
                             && Vector3.Distance(thisAtom1.GetAtomPosition(), thisAtom2.GetAtomPosition()) >= 0.4f
                             && Vector3.Distance(thisAtom1.GetAtomPosition(), thisAtom2.GetAtomPosition()) <= (thisAtom1.GetCovalentRadii() + thisAtom2.GetCovalentRadii() + 0.56))
@@ -383,8 +324,8 @@ new Dictionary<SecondaryStructureParser, List<AtomParser>>();
         {
             foreach (List<int> pairOfAtoms in listOfConectPairs)
             {
-                if ((!MainMenu.hideHydrogens) ||
-                    (MainMenu.hideHydrogens &&
+                if ((!Configurator.GetHideHydrogens()) ||
+                    (Configurator.GetHideHydrogens() &&
                     (listOfAtoms[pairOfAtoms[0]].GetElementType() != "H"
                     || listOfAtoms[pairOfAtoms[1]].GetElementType() != "H")))
                 {
@@ -404,17 +345,17 @@ new Dictionary<SecondaryStructureParser, List<AtomParser>>();
         atoms[1] = thisAtom2.GetAtomPosition();
         bondLine.SetPositions(atoms);
 
-        if (MainMenu.colouring == "Residues" && thisAtom1.GetResidueName() == thisAtom2.GetResidueName())
+        if (Configurator.GetColouring() == Colouring.residues && thisAtom1.GetResidueName() == thisAtom2.GetResidueName())
         {
             ResiduesColouring(thisAtom1, bond);
         }
 
-        if (MainMenu.colouring == "Subunits" && thisAtom1.GetChainID() == thisAtom2.GetChainID())
+        if (Configurator.GetColouring() == Colouring.subunits && thisAtom1.GetChainID() == thisAtom2.GetChainID())
         {
             SubunitsColouring(thisAtom1, bond);
         }
 
-        if (MainMenu.colouring == "CPK")
+        if (Configurator.GetColouring() == Colouring.cpk)
         {
             CpkColouringForLines(thisAtom1, thisAtom2, bondLine);
         }
@@ -521,12 +462,13 @@ new Dictionary<SecondaryStructureParser, List<AtomParser>>();
                 //    new Vector3(2, lengthOfHelix, 2);
                 //cylinderHelix.transform.rotation =
                 //    Quaternion.LookRotation(atomHelixPositions[atomHelixPositions.Count - 1]);
+                
                 Vector3 cylinderWidthOffset = atomHelixPositions[2] - atomHelixPositions[0];
                 Vector3 startingPointOfHelix = atomHelixPositions[0] + cylinderWidthOffset/2.0f;
                 Vector3 endingPointOfHelix = atomHelixPositions[atomHelixPositions.Count - 1] + cylinderWidthOffset / 2.0f;
                 Vector3 cylinderLengthOffset = endingPointOfHelix - startingPointOfHelix;
                 
-                Vector3 scale = new Vector3(5.0f, cylinderLengthOffset.magnitude / 2.0f, 5.0f);
+                Vector3 scale = new Vector3(4.6f, cylinderLengthOffset.magnitude/2.0f, 4.6f);
                 Vector3 position = startingPointOfHelix + (cylinderLengthOffset / 2.0f);
 
 
@@ -540,11 +482,9 @@ new Dictionary<SecondaryStructureParser, List<AtomParser>>();
 
     }
     void AnalizeSecondaryStructure(List<AtomParser> listOfAtoms)
-    {
+    { 
 
-
-
-        List<SecondaryStructureParser> listOfSecondaryStructures = UseStride();
+        List<SecondaryStructureParser> listOfSecondaryStructures = fileReader.StrideAnalize();
         List<SecondaryStructureParser> listOfAlphaHelices = new List<SecondaryStructureParser>();
         List<SecondaryStructureParser> listOfBetaSheets = new List<SecondaryStructureParser>();
 
@@ -608,23 +548,7 @@ new Dictionary<SecondaryStructureParser, List<AtomParser>>();
 
     }
 
-    List<SecondaryStructureParser> UseStride()
-    {
-        List<SecondaryStructureParser> listOfSecondaryStructures = new List<SecondaryStructureParser>();
-        StreamReader strideFile = new StreamReader(client.OpenRead("http://webclu.bio.wzw.tum.de/cgi-bin/stride/stridecgi.py?pdbid=" + MainMenu.pdbID + "&action=compute"));
-        while (!strideFile.EndOfStream)
-        {
-            string strideLine = strideFile.ReadLine();
-            if (strideLine.Contains("LOC"))
-            {
-
-                SecondaryStructureParser thisSecondaryStructure = new SecondaryStructureParser(strideLine);
-                listOfSecondaryStructures.Add(thisSecondaryStructure);
-            }
-        }
-        strideFile.Close();
-        return listOfSecondaryStructures;
-    }
+   
 
     void CpkColouring(AtomParser thisAtom, GameObject atomBall)
     {

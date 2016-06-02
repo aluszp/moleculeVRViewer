@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Assets.Code.Sources
 {
-    class AtomParser
+    public class AtomParser
     {
         int serial, resSeq;
         string recordName, atomName, resName, chainID, elementType;
