@@ -15,7 +15,7 @@ public class MoleculeViewer : MonoBehaviour
     public GameObject cylinderHelixPrefab;
     public GameObject arrowSheetPrefab;
 
-    public Vector3 target = new Vector3(0, 0, 0); //geometric center of molecule
+    Vector3 target = new Vector3(0, 0, 0); //geometric center of molecule
     bool rotating = true; //initial rotating
     bool hasHydrogens = false;
     Dictionary<string, Color> chainColorDictionary = new Dictionary<string, Color>();
@@ -476,9 +476,12 @@ new Dictionary<SecondaryStructureParser, List<AtomParser>>();
                  (GameObject)Instantiate(atomPrefab, point, Quaternion.identity);
                 
             }
-            Vector3[] backbonePointsNew = CurvesSmoother.MakeSmoothCurve(backbonePoints, 2.0f);
+            Vector3[] backbonePointsNew = CurvesSmoother.MakeSmoothCurve(backbonePoints, 3.0f);
 
-            PipeTheLine backbonePipe = new PipeTheLine(backbonePointsNew, pipePrefab, 0.6f, 0.6f);
+
+            PipeTheLine backbonePipe = pipePrefab.AddComponent<PipeTheLine>();
+
+            backbonePipe.DrawThePipe(backbonePointsNew, pipePrefab, 0.4f, 0.6f);
 
 
             //GameObject helix = (GameObject)Instantiate(cartoonLinePrefab, aCarbons[0], Quaternion.identity);
@@ -515,16 +518,15 @@ new Dictionary<SecondaryStructureParser, List<AtomParser>>();
 
             foreach (List<Vector3> atomPositions in dictionaryOfAlphaHelix.Values)
             {
-                //GameObject cylinderHelix =
-                //    (GameObject)Instantiate(cylinderHelixPrefab, dictionaryOfAlphaHelix[alphaHelix][0], Quaternion.identity);
-                //float lengthOfHelix = Vector3.Distance(dictionaryOfAlphaHelix[alphaHelix][0],
-                //    dictionaryOfAlphaHelix[alphaHelix][dictionaryOfAlphaHelix[alphaHelix].Count - 1]);
-                //cylinderHelix.transform.position = new Vector3(dictionaryOfAlphaHelix[alphaHelix][0].x, lengthOfHelix / 2, dictionaryOfAlphaHelix[alphaHelix][0].z);
-                //cylinderHelix.transform.localScale =
-                //    new Vector3(2, lengthOfHelix, 2);
-                //cylinderHelix.transform.rotation =
-                //    Quaternion.LookRotation(dictionaryOfAlphaHelix[alphaHelix][dictionaryOfAlphaHelix[alphaHelix].Count - 1]);
-                
+                GameObject cylinderHelix =
+                    (GameObject)Instantiate(cylinderHelixPrefab, atomPositions[0], Quaternion.identity);
+                float lengthOfHelix = Vector3.Distance(atomPositions[0], atomPositions[atomPositions.Count-1]);
+                cylinderHelix.transform.position = new Vector3(atomPositions[0].x, lengthOfHelix / 2, atomPositions[0].z);
+                cylinderHelix.transform.localScale =
+                    new Vector3(2, lengthOfHelix, 2);
+                cylinderHelix.transform.rotation =
+                    Quaternion.LookRotation(atomPositions[atomPositions.Count - 1]);
+
             }
         }
 

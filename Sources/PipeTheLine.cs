@@ -13,7 +13,7 @@ public class PipeTheLine : MonoBehaviour
     float radiusX;
     float radiusY;
 
-    public PipeTheLine(Vector3[] pointsOfLine, GameObject pipePrefab, float givenRadiusX, float givenRadiusY)
+    public void DrawThePipe(Vector3[] pointsOfLine, GameObject pipePrefab, float givenRadiusX, float givenRadiusY)
     {
         GameObject pipe = (GameObject)Instantiate(pipePrefab, Vector3.zero, Quaternion.identity);
         points = pointsOfLine;
