@@ -470,12 +470,7 @@ new Dictionary<SecondaryStructureParser, List<AtomParser>>();
         foreach (string chainKey in dictionaryOfBackbone.Keys)
         {
             Vector3[] backbonePoints = dictionaryOfBackbone[chainKey].ToArray();
-            foreach(Vector3 point in backbonePoints)
-            {
-                GameObject helixPoint =
-                 (GameObject)Instantiate(atomPrefab, point, Quaternion.identity);
-                
-            }
+
             Vector3[] backbonePointsNew = CurvesSmoother.MakeSmoothCurve(backbonePoints, 3.0f);
 
 
@@ -516,16 +511,29 @@ new Dictionary<SecondaryStructureParser, List<AtomParser>>();
         {
             AnalizeSecondaryStructure(listOfAtoms);
 
-            foreach (List<Vector3> atomPositions in dictionaryOfAlphaHelix.Values)
+            foreach (List<Vector3> atomHelixPositions in dictionaryOfAlphaHelix.Values)
             {
-                GameObject cylinderHelix =
-                    (GameObject)Instantiate(cylinderHelixPrefab, atomPositions[0], Quaternion.identity);
-                float lengthOfHelix = Vector3.Distance(atomPositions[0], atomPositions[atomPositions.Count-1]);
-                cylinderHelix.transform.position = new Vector3(atomPositions[0].x, lengthOfHelix / 2, atomPositions[0].z);
-                cylinderHelix.transform.localScale =
-                    new Vector3(2, lengthOfHelix, 2);
-                cylinderHelix.transform.rotation =
-                    Quaternion.LookRotation(atomPositions[atomPositions.Count - 1]);
+                //GameObject cylinderHelix =
+                //    (GameObject)Instantiate(cylinderHelixPrefab, atomHelixPositions[0], Quaternion.identity);
+                //float lengthOfHelix = Vector3.Distance(atomHelixPositions[0], atomHelixPositions[atomHelixPositions.Count-1]);
+                //cylinderHelix.transform.position = new Vector3(atomHelixPositions[0].x, lengthOfHelix / 2, atomHelixPositions[0].z);
+                //cylinderHelix.transform.localScale =
+                //    new Vector3(2, lengthOfHelix, 2);
+                //cylinderHelix.transform.rotation =
+                //    Quaternion.LookRotation(atomHelixPositions[atomHelixPositions.Count - 1]);
+                Vector3 cylinderWidthOffset = atomHelixPositions[2] - atomHelixPositions[0];
+                Vector3 startingPointOfHelix = atomHelixPositions[0] + cylinderWidthOffset/2.0f;
+                Vector3 endingPointOfHelix = atomHelixPositions[atomHelixPositions.Count - 1] + cylinderWidthOffset / 2.0f;
+                Vector3 cylinderLengthOffset = endingPointOfHelix - startingPointOfHelix;
+                
+                Vector3 scale = new Vector3(5.0f, cylinderLengthOffset.magnitude / 2.0f, 5.0f);
+                Vector3 position = startingPointOfHelix + (cylinderLengthOffset / 2.0f);
+
+
+                GameObject cylinderHelix = (GameObject)Instantiate(cylinderHelixPrefab, position, Quaternion.identity);
+                cylinderHelix.transform.up = cylinderLengthOffset;
+                cylinderHelix.transform.localScale = scale;
+                
 
             }
         }

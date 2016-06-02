@@ -50,8 +50,7 @@ public class PipeTheLine : MonoBehaviour
         }
 
 
-        foreach (Vector3 vertix in vertices)
-        { print(vertix); }
+        
         mesh.vertices = vertices;
     }
 
