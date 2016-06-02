@@ -19,6 +19,7 @@ public class MoleculeViewer : MonoBehaviour
     bool rotating; //initial rotating
 
     FileReader fileReader;
+    ColouringApplier colouringApplier;
 
     bool hasHydrogens;
     Dictionary<string, Color> chainColorDictionary;
@@ -43,9 +44,9 @@ public class MoleculeViewer : MonoBehaviour
     {
         target = new Vector3(0, 0, 0);
         rotating = true;
-        chainColorDictionary = new Dictionary<string, Color>();
-        residueColorDictionary = new Dictionary<string, Color>();
-        atomColorDictionary = new Dictionary<string, Color>();
+
+        colouringApplier = new ColouringApplier();
+
         dictionaryOfBackbone = new Dictionary<string, List<Vector3>>();
         dictionaryOfNucleicBackbone = new Dictionary<string, List<Vector3>>();
         dictionaryOfAlphaHelix = new Dictionary<SecondaryStructureParser, List<Vector3>>();
@@ -63,7 +64,10 @@ public class MoleculeViewer : MonoBehaviour
         residues = fileReader.GetResidues();
         listOfConectPairs = fileReader.GetListOfConectPairs();
 
-        numberOfChains = chainColorDictionary.Keys.Count;
+        //analyze
+        chains = chains.Remove(chains.Length - 1);
+        print(chains);
+        numberOfChains = chains.Split(',').Length;
         numberOfAtoms = listOfAtoms.Count;
         target = sumOfPositions / numberOfAtoms;
         transform.position = target - new Vector3(0, 0, 50);
@@ -72,85 +76,21 @@ public class MoleculeViewer : MonoBehaviour
         switch (Configurator.GetColouring())
         {
             case (Colouring.subunits):
-                PrepareForSubunitsColouring();
+                chainColorDictionary = colouringApplier.PrepareForSubunitsColouring(chains);
                 break;
 
             case (Colouring.residues):
-                PrepareForResiduesColouring();
+                residueColorDictionary = colouringApplier.PrepareForResiduesColouring(residues);
                 break;
 
             case (Colouring.cpk):
-                PrepareForCpkColouring();
+                atomColorDictionary = colouringApplier.PrepareForCpkColouring();
                 break;
         }
 
         Draw(listOfAtoms);
     }
-
     
-
-    void PrepareForSubunitsColouring()
-    {
-        chains = chains.Remove(chains.Length - 1);
-        foreach (string chain in chains.Split(','))
-        {
-            if (!chainColorDictionary.ContainsKey(chain))
-            {
-                chainColorDictionary.Add(chain, new Color(UnityEngine.Random.Range(0.0f, 1.0f), UnityEngine.Random.Range(0.0f, 1.0f), UnityEngine.Random.Range(0.0f, 1.0f)));
-            }
-        }
-    }
-
-    void PrepareForResiduesColouring()
-    {
-        residueColorDictionary.Add("ALA", new Color32(200, 200, 200, 1));
-        residueColorDictionary.Add("ASN", new Color32(0, 220, 220, 1));
-        residueColorDictionary.Add("ASP", new Color32(230, 10, 10, 1));
-        residueColorDictionary.Add("ARG", new Color32(20, 90, 255, 1));
-        residueColorDictionary.Add("CYS", new Color32(230, 230, 0, 1));
-        residueColorDictionary.Add("GLN", new Color32(0, 220, 220, 1));
-        residueColorDictionary.Add("GLU", new Color32(230, 10, 10, 1));
-        residueColorDictionary.Add("GLY", new Color32(235, 235, 235, 1));
-        residueColorDictionary.Add("HIS", new Color32(130, 130, 210, 1));
-        residueColorDictionary.Add("ILE", new Color32(15, 130, 15, 1));
-        residueColorDictionary.Add("LEU", new Color32(15, 130, 15, 1));
-        residueColorDictionary.Add("LYS", new Color32(20, 90, 255, 1));
-        residueColorDictionary.Add("MET", new Color32(230, 230, 0, 1));
-        residueColorDictionary.Add("PHE", new Color32(50, 50, 170, 1));
-        residueColorDictionary.Add("PRO", new Color32(220, 150, 130, 1));
-        residueColorDictionary.Add("SER", new Color32(250, 150, 0, 1));
-        residueColorDictionary.Add("THR", new Color32(250, 150, 0, 1));
-        residueColorDictionary.Add("TYR", new Color32(50, 50, 170, 1));
-        residueColorDictionary.Add("TRP", new Color32(180, 90, 180, 1));
-        residueColorDictionary.Add("VAL", new Color32(15, 130, 15, 1));
-        residueColorDictionary.Add("HOH", Color.red);
-
-        residues = residues.Remove(residues.Length - 1);
-        foreach (string residue in residues.Split(' '))
-        {
-            if (!residueColorDictionary.ContainsKey(residue))
-            {
-                residueColorDictionary.Add(residue, new Color(UnityEngine.Random.Range(0.0f, 1.0f), UnityEngine.Random.Range(0.0f, 1.0f), UnityEngine.Random.Range(0.0f, 1.0f)));
-            }
-        }
-    }
-
-    void PrepareForCpkColouring()
-    {
-        atomColorDictionary.Add("H", Color.white);
-        atomColorDictionary.Add("C", Color.black);
-        atomColorDictionary.Add("N", Color.blue);
-        atomColorDictionary.Add("O", Color.red);
-        atomColorDictionary.Add("F", Color.green);
-        atomColorDictionary.Add("CL", Color.green);
-        atomColorDictionary.Add("P", new Color32(255, 153, 0, 1)); //orange
-        atomColorDictionary.Add("S", Color.yellow);
-        atomColorDictionary.Add("BR", new Color32(153, 0, 0, 1));//dark red
-        atomColorDictionary.Add("MG", new Color32(0, 102, 0, 1)); //dark green
-
-    }
-
-
     void Draw(List<AtomParser> listOfAtoms)
     {
         if (Configurator.GetRepresentationStyle() == RepresentationStyles.vanDerWaals)
@@ -259,15 +199,15 @@ public class MoleculeViewer : MonoBehaviour
                 }
                 if (Configurator.GetColouring() == Colouring.cpk)
                 {
-                    CpkColouring(thisAtom, atomBall);
+                    colouringApplier.CpkColouring(thisAtom, atomBall, atomColorDictionary);
                 }
                 else if (Configurator.GetColouring() == Colouring.subunits)
                 {
-                    SubunitsColouring(thisAtom, atomBall);
+                    colouringApplier.SubunitsColouring(thisAtom, atomBall, chainColorDictionary);
                 }
                 else if (Configurator.GetColouring() == Colouring.residues)
                 {
-                    ResiduesColouring(thisAtom, atomBall);
+                    colouringApplier.ResiduesColouring(thisAtom, atomBall, residueColorDictionary);
                 }
             }
 
@@ -347,17 +287,17 @@ public class MoleculeViewer : MonoBehaviour
 
         if (Configurator.GetColouring() == Colouring.residues && thisAtom1.GetResidueName() == thisAtom2.GetResidueName())
         {
-            ResiduesColouring(thisAtom1, bond);
+            colouringApplier.ResiduesColouring(thisAtom1, bond, residueColorDictionary);
         }
 
         if (Configurator.GetColouring() == Colouring.subunits && thisAtom1.GetChainID() == thisAtom2.GetChainID())
         {
-            SubunitsColouring(thisAtom1, bond);
+            colouringApplier.SubunitsColouring(thisAtom1, bond, chainColorDictionary);
         }
 
         if (Configurator.GetColouring() == Colouring.cpk)
         {
-            CpkColouringForLines(thisAtom1, thisAtom2, bondLine);
+            colouringApplier.CpkColouringForLines(thisAtom1, thisAtom2, bondLine, atomColorDictionary);
         }
     }
 
@@ -482,7 +422,7 @@ public class MoleculeViewer : MonoBehaviour
 
     }
     void AnalizeSecondaryStructure(List<AtomParser> listOfAtoms)
-    { 
+    {
 
         List<SecondaryStructureParser> listOfSecondaryStructures = fileReader.StrideAnalize();
         List<SecondaryStructureParser> listOfAlphaHelices = new List<SecondaryStructureParser>();
@@ -548,38 +488,6 @@ public class MoleculeViewer : MonoBehaviour
 
     }
 
-   
-
-    void CpkColouring(AtomParser thisAtom, GameObject atomBall)
-    {
-        atomBall.GetComponent<Renderer>().material.color = atomColorDictionary[thisAtom.GetElementType()];
-
-    }
-
-    void CpkColouringForLines(AtomParser thisAtom1, AtomParser thisAtom2, LineRenderer lineToColour)
-    {
-        Color colour1, colour2;
-        colour1 = atomColorDictionary[thisAtom1.GetElementType()];
-        colour2 = atomColorDictionary[thisAtom2.GetElementType()];
-        lineToColour.SetColors(colour1, colour2);
-        lineToColour.material = new Material(Shader.Find("Particles/Alpha Blended"));
-    }
-
-    void SubunitsColouring(AtomParser thisAtom, GameObject thingToColour)
-    {
-
-        thingToColour.GetComponent<Renderer>().material.color = chainColorDictionary[thisAtom.GetChainID()];
-
-    }
-
-    void ResiduesColouring(AtomParser thisAtom, GameObject thingToColour)
-    {
-        //http://life.nthu.edu.tw/~fmhsu/rasframe/COLORS.HTM
-
-        thingToColour.GetComponent<Renderer>().material.color = residueColorDictionary[thisAtom.GetResidueName()];
-
-    }
-
     // once per frame:
     void Update()
     {
@@ -595,10 +503,7 @@ public class MoleculeViewer : MonoBehaviour
             }
         }
         PerformKeyboardActions(speed);
-
-
-
-
+        
     }
 
 

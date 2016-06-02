@@ -84,8 +84,7 @@ namespace Assets.Code.Sources
                 }
 
                 //creating dictionary of subunits and respective colours for subunits coloring method
-                else if ((Configurator.GetColouring() == Colouring.subunits)
-                    && (line.Substring(0, 6).Trim() == "COMPND")
+                else if ((line.Substring(0, 6).Trim() == "COMPND")
                     && (line.Contains("CHAIN:")))
                 {
 
