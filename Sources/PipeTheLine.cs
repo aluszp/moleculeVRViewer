@@ -12,9 +12,12 @@ public class PipeTheLine : MonoBehaviour
     private int[] triangles;
     float radiusX;
     float radiusY;
+    int pointsOfRing;
+    const int quadVertices = 4;
 
     public void DrawThePipe(Vector3[] pointsOfLine, GameObject pipePrefab, float givenRadiusX, float givenRadiusY)
     {
+        pointsOfRing = 20;
         GameObject pipe = (GameObject)Instantiate(pipePrefab, Vector3.zero, Quaternion.identity);
         points = pointsOfLine;
         pipe.GetComponent<MeshFilter>().mesh = mesh = new Mesh();
@@ -24,31 +27,20 @@ public class PipeTheLine : MonoBehaviour
         SetVertices();
         SetTriangles();
         mesh.RecalculateNormals();
+       
         
     }
 
     private void SetVertices()
     {
 
-        vertices = new Vector3[(10 * 4 * (points.Length)) + 22];
+        vertices = new Vector3[(pointsOfRing * quadVertices * (points.Length))]; 
         CreateFirstQuadRing();
-        int iDelta = 10 * 4;
+        int iDelta = pointsOfRing * quadVertices;
         for (int pointIndex = 2, i = iDelta; pointIndex < points.Length; pointIndex++, i += iDelta)
         {
             CreateQuadRing(pointIndex, i);
         }
-        vertices[10 * 4 * (points.Length)] = points[0];
-        vertices[10 * 4 * (points.Length) + 1] = points[points.Length - 1];
-
-        float angleStep = (2f * Mathf.PI) / 10;
-        for (int angle = 0; angle < 10; angle++)
-        {
-            Vector3 beginningPoint = GetPointOfVertix(points[0], angle * angleStep);
-            vertices[(10 * 4 * (points.Length)) + 2 + angle] = beginningPoint;
-            Vector3 endingPoint = GetPointOfVertix(points[points.Length - 1], angle * angleStep);
-            vertices[(10 * 4 * (points.Length)) + 12 + angle] = endingPoint;
-        }
-
 
         
         mesh.vertices = vertices;
@@ -56,13 +48,13 @@ public class PipeTheLine : MonoBehaviour
 
     private void CreateFirstQuadRing()
     {
-        float angleStep = (2f * Mathf.PI) / 10;
+        float angleStep = (2f * Mathf.PI) / pointsOfRing;
 
 
         Vector3 vertexA = GetPointOfVertix(points[1], 0);
         Vector3 vertexB = GetPointOfVertix(points[0], 0);
 
-        for (int angle = 1, i = 0; angle <= 10; angle++, i += 4)
+        for (int angle = 1, i = 0; angle <= pointsOfRing; angle++, i += 4)
         {
             vertices[i] = vertexA;
             vertices[i + 1] = vertexA = GetPointOfVertix(points[1], angle * angleStep);
@@ -72,33 +64,14 @@ public class PipeTheLine : MonoBehaviour
 
     }
 
-    //private void CreateSecondQuadRing()
-    //{
-    //    float angleStep = (2f * Mathf.PI) / 10;
-    //    Vector3[] points = { new Vector3(0, 0, 0), new Vector3(0, 0, 2), new Vector3(0, 0, 4), new Vector3(0, 0, 6) };
-
-    //    Vector3 vertexC = GetPointOfVertix(points[2], 0);
-    //    Vector3 vertexD = GetPointOfVertix(points[1], 0);
-
-    //    for (int angle = 1, i = 40; angle <= 10; angle++, i += 4)
-    //    {
-    //        vertices[i] = vertexC;
-    //        vertices[i + 1] = vertexC = GetPointOfVertix(points[2], angle * angleStep);
-    //        vertices[i + 2] = vertexD;
-    //        vertices[i + 3] = vertexD = GetPointOfVertix(points[1], angle * angleStep);
-    //    }
-    //    foreach (Vector3 vertix in vertices)
-    //    { print(vertix); }
-    //}
-
     private void CreateQuadRing(int pointIndex, int i)
     {
 
-        float angleStep = (2f * Mathf.PI) / 10;
-        int ringOffset = 10 * 4;
+        float angleStep = (2f * Mathf.PI) / pointsOfRing;
+        int ringOffset = pointsOfRing * quadVertices;
 
 
-        for (int angle = 0; angle <= 10; angle++, i += 4)
+        for (int angle = 0; angle <= pointsOfRing; angle++, i += quadVertices)
         {
             vertices[i] = GetPointOfVertix(points[pointIndex], angle * angleStep);
             vertices[i + 1] = GetPointOfVertix(points[pointIndex], (angle + 1) * angleStep);
@@ -110,50 +83,14 @@ public class PipeTheLine : MonoBehaviour
     private void SetTriangles()
     {
 
-        triangles = new int[(10 * 6 * (points.Length)) + 60];
-        for (int t = 0, i = 0; t < triangles.Length - 60; t += 6, i += 4)
+        triangles = new int[(pointsOfRing * 6 * (points.Length)) ];
+        for (int t = 0, i = 0; t < triangles.Length; t += 6, i += 4)
         {
             triangles[t] = i;
             triangles[t + 1] = triangles[t + 4] = i + 1;
             triangles[t + 2] = triangles[t + 3] = i + 2;
             triangles[t + 5] = i + 3;
         }
-
-        for (int ti = 0, vi = 2; ti < 30; ti += 3, vi++)
-        {
-            if (ti != 27)
-            {
-                triangles[(10 * 6 * (points.Length)) + ti] = (10 * 4 * (points.Length)) + vi;
-                triangles[(10 * 6 * (points.Length)) + ti + 1] = (10 * 4 * (points.Length)) + vi + 1;
-                triangles[(10 * 6 * (points.Length)) + ti + 2] = 10 * 4 * (points.Length);
-            }
-            else
-            {
-                triangles[(10 * 6 * (points.Length)) + ti] = (10 * 4 * (points.Length)) + vi;
-                triangles[(10 * 6 * (points.Length)) + ti + 1] = (10 * 4 * (points.Length)) + 2;
-                triangles[(10 * 6 * (points.Length)) + ti + 2] = 10 * 4 * (points.Length);
-            }
-        }
-
-        for (int ti = 0, vi = 12; ti < 30; ti += 3, vi++)
-        {
-            if (ti != 27)
-            {
-                triangles[(10 * 6 * (points.Length)) + 30 + ti + 1] = (10 * 4 * (points.Length)) + vi;
-                triangles[(10 * 6 * (points.Length)) + 30 + ti] = (10 * 4 * (points.Length)) + vi + 1;
-                triangles[(10 * 6 * (points.Length)) + 30 + ti + 2] = (10 * 4 * (points.Length)) + 1;
-            }
-            else
-            {
-                triangles[(10 * 6 * (points.Length)) + 30 + ti + 1] = (10 * 4 * (points.Length)) + vi;
-                triangles[(10 * 6 * (points.Length)) + 30 + ti] = (10 * 4 * (points.Length)) + 12;
-                triangles[(10 * 6 * (points.Length)) + 30 + ti + 2] = (10 * 4 * (points.Length)) + 1;
-            }
-        }
-
-
-
-
 
         mesh.triangles = triangles;
     }

@@ -66,6 +66,7 @@ namespace Assets.Code.Sources
         {
             //System.IO.StreamReader file = new System.IO.StreamReader(@"C:\Users\Dell 15z\Studia\NOWA PRACA MGR\4QRV.pdb");
             StreamReader file = new StreamReader(client.OpenRead(URL));
+            listOfConectPairs = new List<List<int>>();
 
             while (!file.EndOfStream)
             {
@@ -108,8 +109,9 @@ namespace Assets.Code.Sources
                         && Int32.Parse(line.Substring(11, 5).Trim()) > Int32.Parse(line.Substring(6, 5).Trim())
                         && Int32.Parse(line.Substring(11, 5).Trim()) != 0)
                     {
+                       
                         listOfConectPairs.Add
-                            (new List<int> { Int32.Parse(line.Substring(6, 5).Trim()), Int32.Parse(line.Substring(11, 5).Trim()) });
+                            (new List<int>() { Int32.Parse(line.Substring(6, 5).Trim()), Int32.Parse(line.Substring(11, 5).Trim()) });
                         numberOfConects++;
                     }
                     if (line.Substring(16, 5).Trim() != ""
@@ -117,7 +119,7 @@ namespace Assets.Code.Sources
                         && Int32.Parse(line.Substring(16, 5).Trim()) != 0)
                     {
                         listOfConectPairs.Add
-                            (new List<int> { Int32.Parse(line.Substring(6, 5).Trim()), Int32.Parse(line.Substring(16, 5).Trim()) });
+                            (new List<int>() { Int32.Parse(line.Substring(6, 5).Trim()), Int32.Parse(line.Substring(16, 5).Trim()) });
                         numberOfConects++;
                     }
                     if (line.Substring(21, 5).Trim() != ""
@@ -125,7 +127,7 @@ namespace Assets.Code.Sources
                         && Int32.Parse(line.Substring(21, 5).Trim()) != 0)
                     {
                         listOfConectPairs.Add
-                            (new List<int> { Int32.Parse(line.Substring(6, 5).Trim()), Int32.Parse(line.Substring(21, 5).Trim()) });
+                            (new List<int>() { Int32.Parse(line.Substring(6, 5).Trim()), Int32.Parse(line.Substring(21, 5).Trim()) });
                         numberOfConects++;
                     }
                     if (line.Substring(26, 5).Trim() != ""
@@ -133,10 +135,19 @@ namespace Assets.Code.Sources
                         && Int32.Parse(line.Substring(26, 5).Trim()) != 0)
                     {
                         listOfConectPairs.Add
-                            (new List<int> { Int32.Parse(line.Substring(6, 5).Trim()), Int32.Parse(line.Substring(26, 5).Trim()) });
+                            (new List<int>() { Int32.Parse(line.Substring(6, 5).Trim()), Int32.Parse(line.Substring(26, 5).Trim()) });
                         numberOfConects++;
                     }
+                    //foreach (List<int> pair in listOfConectPairs)
+                    //{
+                    //    foreach (int atom in pair)
+                    //    {
+                    //        Debug.Log(atom);
+                    //    }
+                    //}
+
                 }
+
 
 
             }

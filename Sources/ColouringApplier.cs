@@ -77,7 +77,15 @@ namespace Assets.Code.Sources
 
         public void CpkColouring(AtomParser thisAtom, GameObject atomBall, Dictionary<string, Color> atomColorDictionary)
         {
-            atomBall.GetComponent<Renderer>().material.color = atomColorDictionary[thisAtom.GetElementType()];
+            if (atomColorDictionary.ContainsKey(thisAtom.GetElementType())) 
+            {
+                atomBall.GetComponent<Renderer>().material.color = atomColorDictionary[thisAtom.GetElementType()];
+            }
+            else
+            {
+                atomBall.GetComponent<Renderer>().material.color = Color.magenta;
+            }
+
 
         }
 
@@ -85,8 +93,23 @@ namespace Assets.Code.Sources
             Dictionary<string, Color> atomColorDictionary)
         {
             Color colour1, colour2;
-            colour1 = atomColorDictionary[thisAtom1.GetElementType()];
-            colour2 = atomColorDictionary[thisAtom2.GetElementType()];
+            if (atomColorDictionary.ContainsKey(thisAtom1.GetElementType()))
+            {
+                colour1 = atomColorDictionary[thisAtom1.GetElementType()];
+            }
+            else
+            {
+                colour1 = Color.magenta;
+            }
+            if (atomColorDictionary.ContainsKey(thisAtom2.GetElementType()))
+            {
+                colour2 = atomColorDictionary[thisAtom2.GetElementType()];
+            }
+            else
+            {
+                colour2 = Color.magenta;
+            }
+            
             lineToColour.SetColors(colour1, colour2);
             lineToColour.material = new Material(Shader.Find("Particles/Alpha Blended"));
         }

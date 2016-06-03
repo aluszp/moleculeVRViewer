@@ -14,6 +14,8 @@ public class MoleculeViewer : MonoBehaviour
     public GameObject pipePrefab;
     public GameObject cylinderHelixPrefab;
     public GameObject arrowSheetPrefab;
+    public Camera mainCamera;
+    public Camera leapMotionCamera;
 
     Vector3 target; //geometric center of molecule
     bool rotating; //initial rotating
@@ -352,10 +354,10 @@ public class MoleculeViewer : MonoBehaviour
         {
             Vector3[] backbonePoints = dictionaryOfBackbone[chainKey].ToArray();
 
-            Vector3[] backbonePointsNew = CurvesSmoother.MakeSmoothCurve(backbonePoints, 3.0f);
+            Vector3[] backbonePointsNew = CurvesSmoother.MakeSmoothCurve(backbonePoints, 5.0f);
 
 
-            PipeTheLine backbonePipe = pipePrefab.AddComponent<PipeTheLine>();
+            PipeTheLine backbonePipe = pipePrefab.GetComponent<PipeTheLine>();
 
             backbonePipe.DrawThePipe(backbonePointsNew, pipePrefab, 0.4f, 0.6f);
 
@@ -535,6 +537,22 @@ public class MoleculeViewer : MonoBehaviour
         else if (Input.GetAxis("Mouse ScrollWheel") > 0)
         {
             transform.Translate(Vector3.forward);
+        }
+
+        if (Input.GetKey(KeyCode.Return))
+        {
+            if (mainCamera.isActiveAndEnabled)
+            {
+                mainCamera.enabled = false;
+                leapMotionCamera.enabled = true;
+            }
+            else
+            {
+                mainCamera.enabled = true;
+                leapMotionCamera.enabled = false;
+            }
+            
+
         }
     }
 
