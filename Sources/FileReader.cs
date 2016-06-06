@@ -14,17 +14,22 @@ namespace Assets.Code.Sources
 
         private WebClient client;
         private bool hasHydrogens;
+        private bool ifStride;
         private List<AtomParser> listOfAtoms;
         private Vector3 sumOfPositions;
         private string chains; //for dictionaries
         private int numberOfConects;
         private string residues; //for dictionaries
         private List<List<int>> listOfConectPairs; //pairs that are connected in CONECT section in pdb
+        private List<SecondaryStructureParser> listOfSecondaryStructures;
+        private List<SecondaryStructureParser> listOfAlphaHelices;
+        private List<SecondaryStructureParser> listOfBetaSheets;
 
         public FileReader()
         {
             client = new WebClient();
             listOfAtoms = new List<AtomParser>();
+            ifStride = true;
         }
 
         public bool GetHasHydrogens()
@@ -62,11 +67,30 @@ namespace Assets.Code.Sources
             return listOfConectPairs;
         }
 
+        public List<SecondaryStructureParser> GetListOfSecondaryStructures()
+        {
+            return listOfSecondaryStructures;
+        }
+
+        public List<SecondaryStructureParser> GetListOfAlphaHelices()
+        {
+            return listOfAlphaHelices;
+        }
+
+        public List<SecondaryStructureParser> GetListOfBetaSheets()
+        {
+            return listOfBetaSheets;
+        }
+
+
         public void ReadFile()
         {
             //System.IO.StreamReader file = new System.IO.StreamReader(@"C:\Users\Dell 15z\Studia\NOWA PRACA MGR\4QRV.pdb");
             StreamReader file = new StreamReader(client.OpenRead(URL));
             listOfConectPairs = new List<List<int>>();
+            listOfSecondaryStructures = new List<SecondaryStructureParser>();
+            listOfAlphaHelices = new List<SecondaryStructureParser>();
+            listOfBetaSheets = new List<SecondaryStructureParser>();
 
             while (!file.EndOfStream)
             {
@@ -148,17 +172,43 @@ namespace Assets.Code.Sources
 
                 }
 
+                else if (Configurator.GetRepresentationStyle() == RepresentationStyles.ribbon
+                    && (line.Substring(0, 6).Trim() == "HELIX" || line.Substring(0, 6).Trim() == "SHEET"))
+                {
+                    ifStride = false;
+                    Debug.Log(line);
+                    SecondaryStructureParser thisSecondaryStructure = new SecondaryStructureParser(line, ifStride);
+                    listOfSecondaryStructures.Add(thisSecondaryStructure);
+                    switch (thisSecondaryStructure.GetTypeOfStructure())
+                    {
+                        case "AlphaHelix":
+                            listOfAlphaHelices.Add(thisSecondaryStructure);
+                            break;
+
+                        case "Strand":
+                            listOfBetaSheets.Add(thisSecondaryStructure);
+                            break;
+                    }
+                }
+                
 
 
             }
 
             file.Close();
+
+            if (ifStride)
+            {
+                StrideAnalize();
+            }
+
+            
         }
 
 
-        public List<SecondaryStructureParser> StrideAnalize()
+        void StrideAnalize()
         {
-            List<SecondaryStructureParser> listOfSecondaryStructures = new List<SecondaryStructureParser>();
+            
             StreamReader strideFile = new StreamReader(client.OpenRead("http://webclu.bio.wzw.tum.de/cgi-bin/stride/stridecgi.py?pdbid=" + Configurator.GetPdbID() + "&action=compute"));
             while (!strideFile.EndOfStream)
             {
@@ -166,12 +216,22 @@ namespace Assets.Code.Sources
                 if (strideLine.Contains("LOC"))
                 {
 
-                    SecondaryStructureParser thisSecondaryStructure = new SecondaryStructureParser(strideLine);
+                    SecondaryStructureParser thisSecondaryStructure = new SecondaryStructureParser(strideLine, ifStride);
                     listOfSecondaryStructures.Add(thisSecondaryStructure);
+                    switch (thisSecondaryStructure.GetTypeOfStructure())
+                    {
+                        case "AlphaHelix":
+                            listOfAlphaHelices.Add(thisSecondaryStructure);
+                            break;
+
+                        case "Strand":
+                            listOfBetaSheets.Add(thisSecondaryStructure);
+                            break;
+                    }
                 }
             }
             strideFile.Close();
-            return listOfSecondaryStructures;
+            
         }
     }
 }

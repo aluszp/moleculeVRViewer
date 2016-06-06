@@ -10,6 +10,7 @@ public class PipeTheLine : MonoBehaviour
     private Mesh mesh;
     private Vector3[] vertices;
     private int[] triangles;
+    Vector2[] uvs;
     float radiusX;
     float radiusY;
     int pointsOfRing;
@@ -17,14 +18,14 @@ public class PipeTheLine : MonoBehaviour
 
     public void DrawThePipe(Vector3[] pointsOfLine, GameObject pipePrefab, float givenRadiusX, float givenRadiusY)
     {
-        pointsOfRing = 20;
+        pointsOfRing = 10;
         GameObject pipe = (GameObject)Instantiate(pipePrefab, Vector3.zero, Quaternion.identity);
         points = pointsOfLine;
         pipe.GetComponent<MeshFilter>().mesh = mesh = new Mesh();
         mesh.name = "Pipe";
         radiusX = givenRadiusX;
         radiusY = givenRadiusY;
-        SetVertices();
+        SetVertices();      
         SetTriangles();
         mesh.RecalculateNormals();
        
@@ -34,7 +35,7 @@ public class PipeTheLine : MonoBehaviour
     private void SetVertices()
     {
 
-        vertices = new Vector3[(pointsOfRing * quadVertices * (points.Length))]; 
+        vertices = new Vector3[(pointsOfRing * quadVertices * points.Length)]; 
         CreateFirstQuadRing();
         int iDelta = pointsOfRing * quadVertices;
         for (int pointIndex = 2, i = iDelta; pointIndex < points.Length; pointIndex++, i += iDelta)
@@ -79,6 +80,8 @@ public class PipeTheLine : MonoBehaviour
             vertices[i + 3] = vertices[i - ringOffset + 1];
         }
     }
+
+  
 
     private void SetTriangles()
     {
