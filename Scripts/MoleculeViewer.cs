@@ -1,9 +1,5 @@
 ﻿using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
-using System;
-using System.Net;
-using System.IO;
 using Assets.Code.Sources;
 using System.Linq;
 
@@ -13,10 +9,12 @@ public class MoleculeViewer : MonoBehaviour
     public GameObject bondPrefab;
     //public GameObject cartoonLinePrefab;
     public GameObject pipePrefab;
-    public GameObject cylinderHelixPrefab;
+    public GameObject helixPrefab;
+    public GameObject sheetPrefab;
     public GameObject arrowSheetPrefab;
     public Camera mainCamera;
     public Camera leapMotionCamera;
+
 
     Vector3 target; //geometric center of molecule
     bool rotating; //initial rotating
@@ -46,6 +44,7 @@ public class MoleculeViewer : MonoBehaviour
     //initialization
     void Start()
     {
+
         target = new Vector3(0, 0, 0);
         rotating = true;
 
@@ -53,6 +52,7 @@ public class MoleculeViewer : MonoBehaviour
 
         dictionaryOfBackbone = new Dictionary<string, List<Vector3>>();
         dictionaryOfNucleicBackbone = new Dictionary<string, List<Vector3>>();
+
 
 
         //read file
@@ -355,7 +355,7 @@ public class MoleculeViewer : MonoBehaviour
         {
             Vector3[] backbonePoints = dictionaryOfBackbone[chainKey].ToArray();
 
-            Vector3[] backbonePointsNew = CurvesSmoother.MakeSmoothCurve(backbonePoints, 3.0f);
+            Vector3[] backbonePointsNew = CurvesSmoother.MakeSmoothCurve(backbonePoints, 1.0f);
 
 
             PipeTheLine backbonePipe = pipePrefab.GetComponent<PipeTheLine>();
@@ -363,34 +363,16 @@ public class MoleculeViewer : MonoBehaviour
             backbonePipe.DrawThePipe(backbonePointsNew, pipePrefab, 0.4f, 0.4f);
 
 
-            //GameObject helix = (GameObject)Instantiate(cartoonLinePrefab, aCarbons[0], Quaternion.identity);
-            //LineRenderer helixLine = helix.GetComponent<LineRenderer>();
-            //List<Vector3> listOfHelixPoints = new List<Vector3>();
-
-            //for (int c=0; c<aCarbonsNew.Length-1; c++)
-            //{
-            //    float t = aCarbonsNew[c].z;
-            //    listOfHelixPoints.Add(new Vector3((float)(Math.Cos(t)), (float)(Math.Sin(t)), t));
-            //    Vector3 middleHelixPoint = Vector3.Lerp(aCarbonsNew[c], aCarbonsNew[c+1], 0.5f);
-            //    float u = middleHelixPoint.z;
-            //    listOfHelixPoints.Add(new Vector3((float)(Math.Cos(u)), (float)(Math.Sin(u)), u));
-            //}
-
-            //Vector3[] helixPoints = listOfHelixPoints.ToArray();
-            //helixLine.SetVertexCount(helixPoints.Length);
-            //helixLine.SetPositions(helixPoints);
-            //helixLine.SetWidth(0.5f, 0.5f);
-
-
         }
     }
     void RibbonRepresentation(List<AtomParser> listOfAtoms)
     {
+
         List<AtomParser> listOfAlphaCarbons = new List<AtomParser>();
         List<Vector3> singleBackboneFragments = new List<Vector3>();
         Dictionary<string, List<List<Vector3>>> dictionaryOfBackboneFragments = new Dictionary<string, List<List<Vector3>>>();
-
-
+        Dictionary<string, List<List<Vector3>>> dictionaryOfHelixFragments = new Dictionary<string, List<List<Vector3>>>();
+        Dictionary<string, List<List<Vector3>>> dictionaryOfSheetFragments = new Dictionary<string, List<List<Vector3>>>();
         foreach (AtomParser thisAtom in listOfAtoms)
         {
             if (thisAtom.GetAtomName() == "CA")
@@ -405,11 +387,12 @@ public class MoleculeViewer : MonoBehaviour
 
         for (int i = 0; i < listOfAlphaCarbons.Count; i++)
         {
+
             if (ssi == listOfSecondaryStructures.Count) //loop already passed through the last secondary structure- get tail
             {
                 singleBackboneFragments.Add(listOfAlphaCarbons[i].GetAtomPosition());
             }
-            if (i== listOfAlphaCarbons.Count-1 && ssi == listOfSecondaryStructures.Count) //add tail to dictionary
+            if (i == listOfAlphaCarbons.Count - 1 && ssi == listOfSecondaryStructures.Count) //add tail to dictionary
             {
                 if (dictionaryOfBackboneFragments.ContainsKey(listOfAlphaCarbons[i].GetChainID()))
                 {
@@ -423,17 +406,17 @@ public class MoleculeViewer : MonoBehaviour
                     dictionaryOfBackboneFragments.Add(listOfAlphaCarbons[i].GetChainID(), listOfBackboneFragments);
                 }
             }
-            if (ssi < listOfSecondaryStructures.Count 
+            if (ssi < listOfSecondaryStructures.Count
                 && listOfAlphaCarbons[i].GetResidueSequence() <= listOfSecondaryStructures[ssi].GetStartingResidue())
-                //if position before beginning of secondary structure, add to list
+            //if position before beginning of secondary structure, add to list
             {
                 singleBackboneFragments.Add(listOfAlphaCarbons[i].GetAtomPosition());
             }
-           
+
             else if (ssi < listOfSecondaryStructures.Count
                 && listOfAlphaCarbons[i].GetResidueSequence() > listOfSecondaryStructures[ssi].GetStartingResidue())
-                //if position belongs to secondary structure, add list to dictionary and start new list, counting from the
-                //end of this secondary structure
+            //if position belongs to secondary structure, add list to dictionary and start new list, counting from the
+            //end of this secondary structure
             {
 
                 if (dictionaryOfBackboneFragments.ContainsKey(listOfAlphaCarbons[i].GetChainID()))
@@ -447,29 +430,116 @@ public class MoleculeViewer : MonoBehaviour
                     listOfBackboneFragments.Add(singleBackboneFragments);
                     dictionaryOfBackboneFragments.Add(listOfAlphaCarbons[i].GetChainID(), listOfBackboneFragments);
                 }
-                i = i + listOfSecondaryStructures[ssi].GetLength() - 1;
+
+                if (listOfSecondaryStructures[ssi].GetTypeOfStructure() == "AlphaHelix")
+                {
+                    List<Vector3> singleHelixFragment = new List<Vector3>();
+                    for (int z = i - 1; z < i + listOfSecondaryStructures[ssi].GetLength() - 1; z++) //-1, cause we need index
+                    {
+                        singleHelixFragment.Add(listOfAlphaCarbons[z].GetAtomPosition());
+                        if (z == i + listOfSecondaryStructures[ssi].GetLength() - 2 && z != listOfAlphaCarbons.Count - 1)
+                        {
+                            singleHelixFragment.Add(listOfAlphaCarbons[z + 1].GetAtomPosition());
+                        }
+                    }
+                    if (dictionaryOfHelixFragments.ContainsKey(listOfAlphaCarbons[i].GetChainID()))
+                    {
+                        dictionaryOfHelixFragments[listOfAlphaCarbons[i].GetChainID()].Add(singleHelixFragment);
+
+                    }
+                    else
+                    {
+                        List<List<Vector3>> listOfHelixFragments = new List<List<Vector3>>();
+                        listOfHelixFragments.Add(singleHelixFragment);
+                        dictionaryOfHelixFragments.Add(listOfAlphaCarbons[i].GetChainID(), listOfHelixFragments);
+                    }
+                }
+                if (listOfSecondaryStructures[ssi].GetTypeOfStructure() == "Strand")
+                {
+                    List<Vector3> singleSheetFragment = new List<Vector3>();
+                    for (int z = i - 1; z < i + listOfSecondaryStructures[ssi].GetLength() - 1; z++)
+                    {
+                        singleSheetFragment.Add(listOfAlphaCarbons[z].GetAtomPosition());
+                        if (z == i + listOfSecondaryStructures[ssi].GetLength() - 2 && z != listOfAlphaCarbons.Count - 1)
+                        {
+                            singleSheetFragment.Add(listOfAlphaCarbons[z + 1].GetAtomPosition());
+                        }
+                    }
+                    if (dictionaryOfSheetFragments.ContainsKey(listOfAlphaCarbons[i].GetChainID()))
+                    {
+                        dictionaryOfSheetFragments[listOfAlphaCarbons[i].GetChainID()].Add(singleSheetFragment);
+
+                    }
+                    else
+                    {
+                        List<List<Vector3>> listOfSheetFragments = new List<List<Vector3>>();
+                        listOfSheetFragments.Add(singleSheetFragment);
+                        dictionaryOfSheetFragments.Add(listOfAlphaCarbons[i].GetChainID(), listOfSheetFragments);
+                    }
+                }
+
+                i = i + listOfSecondaryStructures[ssi].GetLength() - 2; //-2- to cover shared points
                 ssi++;
                 singleBackboneFragments = new List<Vector3>();
+
+
 
             }
 
         }
 
-        
         foreach (string chainKey in dictionaryOfBackboneFragments.Keys)
         {
             print("dla " + chainKey + " mam tyle fragmentów: " + dictionaryOfBackboneFragments[chainKey].Count);
-            for (int i=0; i < dictionaryOfBackboneFragments[chainKey].Count; i++)
+            for (int i = 0; i < dictionaryOfBackboneFragments[chainKey].Count; i++)
             {
                 Vector3[] singleBackboneArray = dictionaryOfBackboneFragments[chainKey][i].ToArray();
 
                 Vector3[] singleBackboneArrayNew = CurvesSmoother.MakeSmoothCurve(singleBackboneArray, 3.0f);
 
-                if (singleBackboneArrayNew.Length >= 2)
+                if (singleBackboneArrayNew.Length > 1)
                 {
                     PipeTheLine fragmentPipe = pipePrefab.GetComponent<PipeTheLine>();
-
+                    pipePrefab.name = "backbone";
                     fragmentPipe.DrawThePipe(singleBackboneArrayNew, pipePrefab, 0.4f, 0.4f);
+                }
+            }
+        }
+
+        foreach (string chainKey in dictionaryOfHelixFragments.Keys)
+        {
+            print("dla " + chainKey + " mam tyle helis: " + dictionaryOfHelixFragments[chainKey].Count);
+            for (int i = 0; i < dictionaryOfHelixFragments[chainKey].Count; i++)
+            {
+                Vector3[] singleHelixArray = dictionaryOfHelixFragments[chainKey][i].ToArray();
+
+                Vector3[] singleHelixArrayNew = CurvesSmoother.MakeSmoothCurve(singleHelixArray, 3.0f);
+
+                if (singleHelixArrayNew.Length > 1)
+                {
+                    PipeTheLine fragmentPipe = helixPrefab.GetComponent<PipeTheLine>();
+                    helixPrefab.name = "helix";
+                    fragmentPipe.DrawThePipe(singleHelixArrayNew, helixPrefab, 0.4f, 0.4f);
+
+                }
+            }
+        }
+
+        foreach (string chainKey in dictionaryOfSheetFragments.Keys)
+        {
+            // print("dla " + chainKey + " mam tyle harmonijek: " + dictionaryOfHelixFragments[chainKey].Count);
+            for (int i = 0; i < dictionaryOfSheetFragments[chainKey].Count; i++)
+            {
+                Vector3[] singleSheetArray = dictionaryOfSheetFragments[chainKey][i].ToArray();
+
+                Vector3[] singleSheetArrayNew = CurvesSmoother.MakeSmoothCurve(singleSheetArray, 3.0f);
+
+                if (singleSheetArrayNew.Length > 1)
+                {
+                    PipeTheLine fragmentPipe = sheetPrefab.GetComponent<PipeTheLine>();
+                    sheetPrefab.name = "sheet";
+                    fragmentPipe.DrawThePipe(singleSheetArrayNew, sheetPrefab, 0.4f, 0.4f);
+
                 }
             }
         }
