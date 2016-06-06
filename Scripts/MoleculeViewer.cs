@@ -40,7 +40,7 @@ public class MoleculeViewer : MonoBehaviour
     int numberOfAtoms; //number of atoms and heteroatoms
     string chains; //for dictionaries
     string residues; //for dictionaries
-  
+
     Vector3 sumOfPositions;
 
     //initialization
@@ -67,7 +67,7 @@ public class MoleculeViewer : MonoBehaviour
         residues = fileReader.GetResidues();
         listOfConectPairs = fileReader.GetListOfConectPairs();
         listOfSecondaryStructures = fileReader.GetListOfSecondaryStructures().OrderBy(o => o.GetStartingResidue()).ToList();
-        
+
         //analyze
         chains = chains.Remove(chains.Length - 1);
         print(chains);
@@ -94,7 +94,7 @@ public class MoleculeViewer : MonoBehaviour
 
         Draw(listOfAtoms);
     }
-    
+
     void Draw(List<AtomParser> listOfAtoms)
     {
         if (Configurator.GetRepresentationStyle() == RepresentationStyles.vanDerWaals)
@@ -387,16 +387,16 @@ public class MoleculeViewer : MonoBehaviour
     void RibbonRepresentation(List<AtomParser> listOfAtoms)
     {
         List<AtomParser> listOfAlphaCarbons = new List<AtomParser>();
-        List<List<Vector3>> listOfBackboneFragments = new List<List<Vector3>>();
         List<Vector3> singleBackboneFragments = new List<Vector3>();
-        
+        Dictionary<string, List<List<Vector3>>> dictionaryOfBackboneFragments = new Dictionary<string, List<List<Vector3>>>();
+
 
         foreach (AtomParser thisAtom in listOfAtoms)
         {
             if (thisAtom.GetAtomName() == "CA")
             {
                 listOfAlphaCarbons.Add(thisAtom);
-                
+
             }
         }
 
@@ -405,44 +405,73 @@ public class MoleculeViewer : MonoBehaviour
 
         for (int i = 0; i < listOfAlphaCarbons.Count; i++)
         {
-            if (ssi == listOfSecondaryStructures.Count)
+            if (ssi == listOfSecondaryStructures.Count) //loop already passed through the last secondary structure- get tail
             {
                 singleBackboneFragments.Add(listOfAlphaCarbons[i].GetAtomPosition());
             }
-
-            else if (listOfAlphaCarbons[i].GetResidueSequence() <= listOfSecondaryStructures[ssi].GetStartingResidue())
+            if (i== listOfAlphaCarbons.Count-1 && ssi == listOfSecondaryStructures.Count) //add tail to dictionary
             {
-                
-                singleBackboneFragments.Add(listOfAlphaCarbons[i].GetAtomPosition());
-                
+                if (dictionaryOfBackboneFragments.ContainsKey(listOfAlphaCarbons[i].GetChainID()))
+                {
+                    dictionaryOfBackboneFragments[listOfAlphaCarbons[i].GetChainID()].Add(singleBackboneFragments);
+
+                }
+                else
+                {
+                    List<List<Vector3>> listOfBackboneFragments = new List<List<Vector3>>();
+                    listOfBackboneFragments.Add(singleBackboneFragments);
+                    dictionaryOfBackboneFragments.Add(listOfAlphaCarbons[i].GetChainID(), listOfBackboneFragments);
+                }
             }
-
-            else if (listOfAlphaCarbons[i].GetResidueSequence() > listOfSecondaryStructures[ssi].GetStartingResidue())
+            if (ssi < listOfSecondaryStructures.Count 
+                && listOfAlphaCarbons[i].GetResidueSequence() <= listOfSecondaryStructures[ssi].GetStartingResidue())
+                //if position before beginning of secondary structure, add to list
             {
-               
+                singleBackboneFragments.Add(listOfAlphaCarbons[i].GetAtomPosition());
+            }
+           
+            else if (ssi < listOfSecondaryStructures.Count
+                && listOfAlphaCarbons[i].GetResidueSequence() > listOfSecondaryStructures[ssi].GetStartingResidue())
+                //if position belongs to secondary structure, add list to dictionary and start new list, counting from the
+                //end of this secondary structure
+            {
+
+                if (dictionaryOfBackboneFragments.ContainsKey(listOfAlphaCarbons[i].GetChainID()))
+                {
+                    dictionaryOfBackboneFragments[listOfAlphaCarbons[i].GetChainID()].Add(singleBackboneFragments);
+
+                }
+                else
+                {
+                    List<List<Vector3>> listOfBackboneFragments = new List<List<Vector3>>();
+                    listOfBackboneFragments.Add(singleBackboneFragments);
+                    dictionaryOfBackboneFragments.Add(listOfAlphaCarbons[i].GetChainID(), listOfBackboneFragments);
+                }
                 i = i + listOfSecondaryStructures[ssi].GetLength() - 1;
-                
-                listOfBackboneFragments.Add(singleBackboneFragments);
                 ssi++;
                 singleBackboneFragments = new List<Vector3>();
 
             }
 
         }
-        listOfBackboneFragments.Add(singleBackboneFragments);
 
-        foreach (List<Vector3> singleBackbone in listOfBackboneFragments)
+        
+        foreach (string chainKey in dictionaryOfBackboneFragments.Keys)
         {
-            print("chcę rysować");
-            Vector3[] singleBackboneArray = singleBackbone.ToArray();
+            print("dla " + chainKey + " mam tyle fragmentów: " + dictionaryOfBackboneFragments[chainKey].Count);
+            for (int i=0; i < dictionaryOfBackboneFragments[chainKey].Count; i++)
+            {
+                Vector3[] singleBackboneArray = dictionaryOfBackboneFragments[chainKey][i].ToArray();
 
-            Vector3[] singleBackboneArrayNew = CurvesSmoother.MakeSmoothCurve(singleBackboneArray, 3.0f);
+                Vector3[] singleBackboneArrayNew = CurvesSmoother.MakeSmoothCurve(singleBackboneArray, 3.0f);
 
-            if (singleBackboneArrayNew.Length >= 2) { 
-            PipeTheLine fragmentPipe = pipePrefab.GetComponent<PipeTheLine>();
+                if (singleBackboneArrayNew.Length >= 2)
+                {
+                    PipeTheLine fragmentPipe = pipePrefab.GetComponent<PipeTheLine>();
 
-            fragmentPipe.DrawThePipe(singleBackboneArrayNew, pipePrefab, 0.4f, 0.4f);}
-
+                    fragmentPipe.DrawThePipe(singleBackboneArrayNew, pipePrefab, 0.4f, 0.4f);
+                }
+            }
         }
     }
 
@@ -461,7 +490,7 @@ public class MoleculeViewer : MonoBehaviour
             }
         }
         PerformKeyboardActions(speed);
-        
+
     }
 
 
@@ -507,7 +536,7 @@ public class MoleculeViewer : MonoBehaviour
                 mainCamera.enabled = true;
                 leapMotionCamera.enabled = false;
             }
-            
+
 
         }
     }
