@@ -16,10 +16,9 @@ public class PipeTheLine : MonoBehaviour
     int pointsOfRing;
     const int quadVertices = 4;
 
-    public void DrawThePipe(Vector3[] pointsOfLine, GameObject pipePrefab, float givenRadiusX, float givenRadiusY)
+    public void DrawThePipe(Vector3[] pointsOfLine, GameObject pipe, float givenRadiusX, float givenRadiusY)
     {
         pointsOfRing = 10;
-        GameObject pipe = (GameObject)Instantiate(pipePrefab, Vector3.zero, Quaternion.identity);
         points = pointsOfLine;
         pipe.GetComponent<MeshFilter>().mesh = mesh = new Mesh();
         mesh.name = "Pipe";

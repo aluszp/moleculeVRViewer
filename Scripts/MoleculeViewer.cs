@@ -11,13 +11,14 @@ public class MoleculeViewer : MonoBehaviour
     public GameObject pipePrefab;
     public GameObject helixPrefab;
     public GameObject sheetPrefab;
-    public GameObject arrowSheetPrefab;
+    public GameObject arrowHeadPrefab;
     public Camera mainCamera;
-    public Camera leapMotionCamera;
+    public GameObject leapMotion;
 
 
     Vector3 target; //geometric center of molecule
     bool rotating; //initial rotating
+    bool enterPressed = false;
 
     FileReader fileReader;
     ColouringApplier colouringApplier;
@@ -357,10 +358,10 @@ public class MoleculeViewer : MonoBehaviour
 
             Vector3[] backbonePointsNew = CurvesSmoother.MakeSmoothCurve(backbonePoints, 1.0f);
 
+            GameObject pipe = (GameObject)Instantiate(pipePrefab, Vector3.zero, Quaternion.identity);
+            PipeTheLine backbonePipe = pipe.GetComponent<PipeTheLine>();
 
-            PipeTheLine backbonePipe = pipePrefab.GetComponent<PipeTheLine>();
-
-            backbonePipe.DrawThePipe(backbonePointsNew, pipePrefab, 0.4f, 0.4f);
+            backbonePipe.DrawThePipe(backbonePointsNew, pipe, 0.4f, 0.4f);
 
 
         }
@@ -499,9 +500,10 @@ public class MoleculeViewer : MonoBehaviour
 
                 if (singleBackboneArrayNew.Length > 1)
                 {
-                    PipeTheLine fragmentPipe = pipePrefab.GetComponent<PipeTheLine>();
-                    pipePrefab.name = "backbone";
-                    fragmentPipe.DrawThePipe(singleBackboneArrayNew, pipePrefab, 0.4f, 0.4f);
+                    GameObject pipe = (GameObject)Instantiate(pipePrefab, Vector3.zero, Quaternion.identity);
+                    PipeTheLine fragmentPipe = pipe.GetComponent<PipeTheLine>();
+                    pipe.name = "backbone";
+                    fragmentPipe.DrawThePipe(singleBackboneArrayNew, pipe, 0.4f, 0.4f);
                 }
             }
         }
@@ -513,13 +515,15 @@ public class MoleculeViewer : MonoBehaviour
             {
                 Vector3[] singleHelixArray = dictionaryOfHelixFragments[chainKey][i].ToArray();
 
-                Vector3[] singleHelixArrayNew = CurvesSmoother.MakeSmoothCurve(singleHelixArray, 3.0f);
+                Vector3[] singleHelixArrayNew = HelixPointsMaker.MakeHelixCurve(2.3f, 5.4f, singleHelixArray[0], singleHelixArray[singleHelixArray.Length-1]);
 
                 if (singleHelixArrayNew.Length > 1)
                 {
-                    PipeTheLine fragmentPipe = helixPrefab.GetComponent<PipeTheLine>();
-                    helixPrefab.name = "helix";
-                    fragmentPipe.DrawThePipe(singleHelixArrayNew, helixPrefab, 0.4f, 0.4f);
+                    Vector3 helixOffset = singleHelixArray[singleHelixArray.Length - 1] - singleHelixArray[0];                
+                    GameObject helixPipe = (GameObject)Instantiate(helixPrefab, Vector3.zero, Quaternion.identity);
+                    PipeTheLine fragmentPipe = helixPipe.GetComponent<PipeTheLine>();
+                    helixPipe.name = "helix";
+                    fragmentPipe.DrawThePipe(singleHelixArrayNew, helixPipe, 0.4f, 0.4f);
 
                 }
             }
@@ -536,10 +540,20 @@ public class MoleculeViewer : MonoBehaviour
 
                 if (singleSheetArrayNew.Length > 1)
                 {
-                    PipeTheLine fragmentPipe = sheetPrefab.GetComponent<PipeTheLine>();
-                    sheetPrefab.name = "sheet";
-                    fragmentPipe.DrawThePipe(singleSheetArrayNew, sheetPrefab, 0.4f, 0.4f);
+                    GameObject sheetPipe = (GameObject)Instantiate(sheetPrefab, Vector3.zero, Quaternion.identity);
+                    PipeTheLine fragmentPipe = sheetPipe.GetComponent<PipeTheLine>();
+                    sheetPipe.name = "sheet";
+                    fragmentPipe.DrawThePipe(singleSheetArrayNew, sheetPipe, 0.6f, 0.6f);
+                    
 
+                    Vector3 offset = singleSheetArrayNew[singleSheetArrayNew.Length - 1] - singleSheetArrayNew[singleSheetArrayNew.Length - 3];
+                    Vector3 scale = new Vector3(0.6f, offset.magnitude /2.0f, 0.6f);
+                    Vector3 position = singleSheetArrayNew[singleSheetArrayNew.Length - 3] - (offset / 2.0f);
+
+                    GameObject arrowHead = (GameObject)Instantiate
+                        (arrowHeadPrefab, position, Quaternion.identity);
+                    arrowHead.transform.up = offset;
+                    arrowHead.transform.localScale = scale;
                 }
             }
         }
@@ -596,16 +610,22 @@ public class MoleculeViewer : MonoBehaviour
 
         if (Input.GetKey(KeyCode.Return))
         {
+            enterPressed = true;
+        }
+
+        if (enterPressed)
+        {
             if (mainCamera.isActiveAndEnabled)
             {
                 mainCamera.enabled = false;
-                leapMotionCamera.enabled = true;
+                leapMotion.SetActive(true);
             }
-            else
-            {
-                mainCamera.enabled = true;
-                leapMotionCamera.enabled = false;
-            }
+        }
+        else
+        {
+            mainCamera.enabled = true;
+            leapMotion.SetActive(false);
+        }
 
 
         }
@@ -613,4 +633,4 @@ public class MoleculeViewer : MonoBehaviour
 
 
 
-}
+
