@@ -516,15 +516,17 @@ public class MoleculeViewer : MonoBehaviour
                 Vector3[] singleHelixArray = dictionaryOfHelixFragments[chainKey][i].ToArray();
 
                 Vector3[] singleHelixArrayNew = HelixPointsMaker.MakeHelixCurve(2.3f, 5.4f, singleHelixArray[0], singleHelixArray[singleHelixArray.Length-1]);
+                
 
                 if (singleHelixArrayNew.Length > 1)
                 {
-                    Vector3 helixOffset = singleHelixArray[singleHelixArray.Length - 1] - singleHelixArray[0];                
-                    GameObject helixPipe = (GameObject)Instantiate(helixPrefab, Vector3.zero, Quaternion.identity);
+                    Vector3 helixOffset = singleHelixArray[singleHelixArray.Length - 1] - singleHelixArray[0];
+                    Vector3 helixPosition = singleHelixArray[0];
+                    GameObject helixPipe = (GameObject)Instantiate(helixPrefab, helixPosition, Quaternion.identity);
                     PipeTheLine fragmentPipe = helixPipe.GetComponent<PipeTheLine>();
                     helixPipe.name = "helix";
                     fragmentPipe.DrawThePipe(singleHelixArrayNew, helixPipe, 0.4f, 0.4f);
-
+                    helixPipe.transform.forward = helixOffset;
                 }
             }
         }
@@ -543,7 +545,12 @@ public class MoleculeViewer : MonoBehaviour
                     GameObject sheetPipe = (GameObject)Instantiate(sheetPrefab, Vector3.zero, Quaternion.identity);
                     PipeTheLine fragmentPipe = sheetPipe.GetComponent<PipeTheLine>();
                     sheetPipe.name = "sheet";
-                    fragmentPipe.DrawThePipe(singleSheetArrayNew, sheetPipe, 0.6f, 0.6f);
+
+                    //cutting last two points, as they will be covered with arrow head
+                    Vector3[] cutSingleSheetArrayNew;
+                    cutSingleSheetArrayNew = singleSheetArrayNew.Take(singleSheetArrayNew.Count() - 2).ToArray();
+
+                    fragmentPipe.DrawThePipe(cutSingleSheetArrayNew, sheetPipe, 0.6f, 0.6f);
                     
 
                     Vector3 offset = singleSheetArrayNew[singleSheetArrayNew.Length - 1] - singleSheetArrayNew[singleSheetArrayNew.Length - 3];

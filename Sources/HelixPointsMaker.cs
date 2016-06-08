@@ -7,27 +7,30 @@ public class HelixPointsMaker : MonoBehaviour
     //arrayToCurve is original Vector3 array, smoothness is the number of interpolations. 
     public static Vector3[] MakeHelixCurve(float r, float slope, Vector3 startingPoint, Vector3 endingPoint)
     {
-        //float b = slope * r;
-       
+        float b = slope * r;
+
         float circumference = Mathf.PI * 2 * r;
-        float arcLength = Mathf.Sqrt(Mathf.Pow(Vector3.Distance(startingPoint, endingPoint), 2) + Mathf.Pow(circumference, 2));
-        float T = arcLength / (Mathf.Sqrt(Mathf.Pow(r, 2) + Mathf.Pow(slope, 2)));
-        Vector3 directionVector = startingPoint - endingPoint;
+        float arcLength = Mathf.Sqrt(Mathf.Pow(endingPoint.z-startingPoint.z, 2) + Mathf.Pow(circumference, 2));
+        float T = arcLength / (Mathf.Sqrt(r*r + slope*slope));
+
+
+        Vector3 directionVector = endingPoint - startingPoint;
 
         List<Vector3> helixPoints = new List<Vector3>();
         List<Vector3> newHelixPoints = new List<Vector3>();
+        
 
         
         for (float t=0; t<=T; t += 0.1f)
-        {   if (t == 0)
-            { helixPoints.Add(startingPoint); }
+        {
+            if (t == 0)
+            { helixPoints.Add(Vector3.zero); }
 
             else
             {
                 Vector3 helixPoint = new Vector3(r * Mathf.Cos(2 * Mathf.PI * t), r * Mathf.Sin(2 * Mathf.PI * t), slope * t);
                 helixPoints.Add(helixPoint);
-                }
-            
+            }            
         }
 
         //for (int i = 0; i < helixPoints.Count; i++)
@@ -63,6 +66,6 @@ public class HelixPointsMaker : MonoBehaviour
 
 
 
-        return (newHelixPoints.ToArray());
+        return (helixPoints.ToArray());
     }
 }
