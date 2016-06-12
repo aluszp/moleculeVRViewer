@@ -55,7 +55,6 @@ public class MoleculeViewer : MonoBehaviour
         dictionaryOfNucleicBackbone = new Dictionary<string, List<Vector3>>();
 
 
-
         //read file
         fileReader = new FileReader();
         fileReader.ReadFile();
@@ -130,6 +129,15 @@ public class MoleculeViewer : MonoBehaviour
 
                 GameObject atomBall = (GameObject)Instantiate(atomPrefab, thisAtom.GetAtomPosition(), Quaternion.identity);
                 atomBall.name = thisAtom.GetAtomName();
+                AtomData atomData = atomBall.GetComponent<AtomData>();
+                atomData.chainID = thisAtom.GetChainID();
+                atomData.elementType = thisAtom.GetElementType();
+                atomData.resName = thisAtom.GetResidueName();
+                atomData.resSeq = thisAtom.GetResidueSequence();
+                atomData.serial = thisAtom.GetSerial();
+                atomData.recordName = thisAtom.GetRecordName();
+                atomData.atomName = thisAtom.GetAtomName();
+
                 switch (thisAtom.GetElementType())
                 {
                     case "F":
@@ -525,7 +533,7 @@ public class MoleculeViewer : MonoBehaviour
                     GameObject helixPipe = (GameObject)Instantiate(helixPrefab, helixPosition, Quaternion.identity);
                     PipeTheLine fragmentPipe = helixPipe.GetComponent<PipeTheLine>();
                     helixPipe.name = "helix";
-                    fragmentPipe.DrawThePipe(singleHelixArrayNew, helixPipe, 0.4f, 0.4f);
+                    fragmentPipe.DrawThePipe(singleHelixArrayNew, helixPipe, 0.8f, 0.4f);
                     helixPipe.transform.forward = helixOffset;
                 }
             }
@@ -550,12 +558,12 @@ public class MoleculeViewer : MonoBehaviour
                     Vector3[] cutSingleSheetArrayNew;
                     cutSingleSheetArrayNew = singleSheetArrayNew.Take(singleSheetArrayNew.Count() - 2).ToArray();
 
-                    fragmentPipe.DrawThePipe(cutSingleSheetArrayNew, sheetPipe, 0.6f, 0.6f);
+                    fragmentPipe.DrawThePipe(cutSingleSheetArrayNew, sheetPipe, 0.5f, 0.5f);
                     
 
                     Vector3 offset = singleSheetArrayNew[singleSheetArrayNew.Length - 1] - singleSheetArrayNew[singleSheetArrayNew.Length - 3];
-                    Vector3 scale = new Vector3(0.6f, offset.magnitude /2.0f, 0.6f);
-                    Vector3 position = singleSheetArrayNew[singleSheetArrayNew.Length - 3] - (offset / 2.0f);
+                    Vector3 scale = new Vector3(0.6f, offset.magnitude/4F, 0.6f);
+                    Vector3 position = singleSheetArrayNew[singleSheetArrayNew.Length - 3]; //- (offset / 2.0f);
 
                     GameObject arrowHead = (GameObject)Instantiate
                         (arrowHeadPrefab, position, Quaternion.identity);
@@ -620,7 +628,8 @@ public class MoleculeViewer : MonoBehaviour
             enterPressed = true;
         }
 
-        if (enterPressed)
+        if (enterPressed && (Configurator.GetRepresentationStyle() == RepresentationStyles.vanDerWaals 
+            || Configurator.GetRepresentationStyle() == RepresentationStyles.ballsAndSticks))
         {
             if (mainCamera.isActiveAndEnabled)
             {

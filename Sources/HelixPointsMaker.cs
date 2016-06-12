@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 
 public class HelixPointsMaker : MonoBehaviour
@@ -7,8 +6,7 @@ public class HelixPointsMaker : MonoBehaviour
     //arrayToCurve is original Vector3 array, smoothness is the number of interpolations. 
     public static Vector3[] MakeHelixCurve(float r, float slope, Vector3 startingPoint, Vector3 endingPoint)
     {
-        float b = slope * r;
-
+        
         float circumference = Mathf.PI * 2 * r;
         float arcLength = Mathf.Sqrt(Mathf.Pow(endingPoint.z-startingPoint.z, 2) + Mathf.Pow(circumference, 2));
         float T = arcLength / (Mathf.Sqrt(r*r + slope*slope));
@@ -32,6 +30,9 @@ public class HelixPointsMaker : MonoBehaviour
                 helixPoints.Add(helixPoint);
             }            
         }
+
+        helixPoints.Add(new Vector3(0, 0, directionVector.magnitude));
+        
 
         //for (int i = 0; i < helixPoints.Count; i++)
         //{
