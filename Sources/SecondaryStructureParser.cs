@@ -21,7 +21,7 @@ namespace Assets.Code.Sources
             {
                 if (line.Substring(0, 6).Trim() == "HELIX" && line.Substring(38, 2).Trim() == "1")
                 {
-                    typeOfStructure = "AlphaHelix";
+                    typeOfStructure = SecondaryStructures.alphaHelix;
                     startingResidue = Int32.Parse(line.Substring(21, 4).Trim());
                     endingResidue = Int32.Parse(line.Substring(33, 4).Trim());
                     chainID = line.Substring(19, 1).Trim();
@@ -30,7 +30,7 @@ namespace Assets.Code.Sources
                 }
                 else if (line.Substring(0, 6).Trim() == "SHEET")
                 {
-                    typeOfStructure = "Strand";
+                    typeOfStructure = SecondaryStructures.betaSheet;
                     startingResidue = Int32.Parse(line.Substring(22, 4).Trim());
                     endingResidue = Int32.Parse(line.Substring(33, 4).Trim());
                     chainID = line.Substring(21, 1).Trim();

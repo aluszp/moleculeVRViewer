@@ -135,7 +135,6 @@ public class MoleculeViewer : MonoBehaviour
                 atomData.resName = thisAtom.GetResidueName();
                 atomData.resSeq = thisAtom.GetResidueSequence();
                 atomData.serial = thisAtom.GetSerial();
-                atomData.recordName = thisAtom.GetRecordName();
                 atomData.atomName = thisAtom.GetAtomName();
 
                 switch (thisAtom.GetElementType())
@@ -440,7 +439,7 @@ public class MoleculeViewer : MonoBehaviour
                     dictionaryOfBackboneFragments.Add(listOfAlphaCarbons[i].GetChainID(), listOfBackboneFragments);
                 }
 
-                if (listOfSecondaryStructures[ssi].GetTypeOfStructure() == "AlphaHelix")
+                if (listOfSecondaryStructures[ssi].GetTypeOfStructure() == SecondaryStructures.alphaHelix)
                 {
                     List<Vector3> singleHelixFragment = new List<Vector3>();
                     for (int z = i - 1; z < i + listOfSecondaryStructures[ssi].GetLength() - 1; z++) //-1, cause we need index
@@ -463,7 +462,7 @@ public class MoleculeViewer : MonoBehaviour
                         dictionaryOfHelixFragments.Add(listOfAlphaCarbons[i].GetChainID(), listOfHelixFragments);
                     }
                 }
-                if (listOfSecondaryStructures[ssi].GetTypeOfStructure() == "Strand")
+                if (listOfSecondaryStructures[ssi].GetTypeOfStructure() == SecondaryStructures.betaSheet)
                 {
                     List<Vector3> singleSheetFragment = new List<Vector3>();
                     for (int z = i - 1; z < i + listOfSecondaryStructures[ssi].GetLength() - 1; z++)

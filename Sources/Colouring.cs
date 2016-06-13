@@ -10,5 +10,6 @@ namespace Assets.Code.Sources
         public const string subunits = "Subunits";
         public const string cpk = "CPK";
         public const string residues = "Residues";
+        public const string secondaryStructures = "Secondary structures";
     }
 }

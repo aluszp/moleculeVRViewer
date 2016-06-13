@@ -46,6 +46,11 @@ public class MainMenu : MonoBehaviour
             colouringDropdown.ClearOptions();
             colouringDropdown.AddOptions(new List<string> { Colouring.cpk, Colouring.residues, Colouring.subunits });
         }
+        else if (Configurator.GetRepresentationStyle() == RepresentationStyles.ribbon)
+        {
+            colouringDropdown.ClearOptions();
+            colouringDropdown.AddOptions(new List<string> { Colouring.secondaryStructures, Colouring.subunits });
+        }
         else
         {
             colouringDropdown.ClearOptions();
