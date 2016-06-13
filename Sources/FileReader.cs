@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Text.RegularExpressions;
 using System.Net;
 using System.IO;
 using UnityEngine;
@@ -18,6 +18,7 @@ namespace Assets.Code.Sources
         private List<AtomParser> listOfAtoms;
         private Vector3 sumOfPositions;
         private string chains; //for dictionaries
+        private string title;
         private int numberOfConects;
         private string residues; //for dictionaries
         private List<List<int>> listOfConectPairs; //pairs that are connected in CONECT section in pdb
@@ -49,7 +50,14 @@ namespace Assets.Code.Sources
 
         public string GetChains()
         {
+            chains = chains.Remove(chains.Length - 1);
             return chains;
+        }
+
+        public string GetTitle()
+        {
+            title = Regex.Replace(title, ";", "");
+            return title;
         }
 
         public int GetNumberOfConects()
@@ -91,6 +99,8 @@ namespace Assets.Code.Sources
             listOfSecondaryStructures = new List<SecondaryStructureParser>();
             listOfAlphaHelices = new List<SecondaryStructureParser>();
             listOfBetaSheets = new List<SecondaryStructureParser>();
+            int titleNo = -2;
+            int titleNo2;
 
             while (!file.EndOfStream)
             {
@@ -106,6 +116,28 @@ namespace Assets.Code.Sources
                     }
                     listOfAtoms.Add(thisAtom);
                     sumOfPositions += thisAtom.GetAtomPosition();
+                }
+
+                else if ((line.Substring(0, 6).Trim() == "COMPND")
+                    && (line.Contains("MOLECULE:")))
+                {
+                    if (!(line.Substring(20, 60).Trim().EndsWith(";")))
+                    {
+                        titleNo = Int32.Parse(line.Substring(9, 1).Trim());
+                        Debug.Log(titleNo);
+                        title = title + line.Substring(20, 60).Trim();
+                    }
+
+                    else
+                    {
+                        title = title + line.Substring(20, 60).Trim() + " ";
+                    }
+                }
+
+                else if ((line.Substring(0, 6).Trim() == "COMPND")
+                   && (Int32.TryParse(line.Substring(9, 1).Trim(), out titleNo2) && titleNo2-1 == titleNo))
+                {
+                    title = title + line.Substring(10, 60).Trim() + " ";
                 }
 
                 //creating dictionary of subunits and respective colours for subunits coloring method

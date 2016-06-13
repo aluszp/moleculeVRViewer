@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections.Generic;
 using Assets.Code.Sources;
 using System.Linq;
@@ -14,11 +15,14 @@ public class MoleculeViewer : MonoBehaviour
     public GameObject arrowHeadPrefab;
     public Camera mainCamera;
     public GameObject leapMotion;
+    public Text startingText;
 
 
     Vector3 target; //geometric center of molecule
     bool rotating; //initial rotating
     bool enterPressed = false;
+    string startingString;
+
 
     FileReader fileReader;
     ColouringApplier colouringApplier;
@@ -39,6 +43,7 @@ public class MoleculeViewer : MonoBehaviour
     int numberOfAtoms; //number of atoms and heteroatoms
     string chains; //for dictionaries
     string residues; //for dictionaries
+    string title;
 
     Vector3 sumOfPositions;
 
@@ -67,15 +72,15 @@ public class MoleculeViewer : MonoBehaviour
         residues = fileReader.GetResidues();
         listOfConectPairs = fileReader.GetListOfConectPairs();
         listOfSecondaryStructures = fileReader.GetListOfSecondaryStructures().OrderBy(o => o.GetStartingResidue()).ToList();
+        title = fileReader.GetTitle();
 
         //analyze
-        chains = chains.Remove(chains.Length - 1);
-        print(chains);
         numberOfChains = chains.Split(',').Length;
         numberOfAtoms = listOfAtoms.Count;
         target = sumOfPositions / numberOfAtoms;
         transform.position = target - new Vector3(0, 0, 50);
         transform.LookAt(target);
+        startingString = title;
 
         switch (Configurator.GetColouring())
         {
@@ -93,7 +98,8 @@ public class MoleculeViewer : MonoBehaviour
         }
 
         Draw(listOfAtoms);
-    }
+
+        }
 
     void Draw(List<AtomParser> listOfAtoms)
     {
@@ -390,6 +396,13 @@ public class MoleculeViewer : MonoBehaviour
             }
         }
 
+        if (listOfAlphaCarbons.Count == 0)
+        {
+            startingString = title + " is not a protein! Switched to backbone representation.";
+            BackboneRepresentation(listOfAtoms);
+            return;
+        }
+
         int ssi = 0; //secondary structure index
 
 
@@ -498,7 +511,6 @@ public class MoleculeViewer : MonoBehaviour
 
         foreach (string chainKey in dictionaryOfBackboneFragments.Keys)
         {
-            print("dla " + chainKey + " mam tyle fragmentów: " + dictionaryOfBackboneFragments[chainKey].Count);
             for (int i = 0; i < dictionaryOfBackboneFragments[chainKey].Count; i++)
             {
                 Vector3[] singleBackboneArray = dictionaryOfBackboneFragments[chainKey][i].ToArray();
@@ -517,7 +529,7 @@ public class MoleculeViewer : MonoBehaviour
 
         foreach (string chainKey in dictionaryOfHelixFragments.Keys)
         {
-            print("dla " + chainKey + " mam tyle helis: " + dictionaryOfHelixFragments[chainKey].Count);
+           
             for (int i = 0; i < dictionaryOfHelixFragments[chainKey].Count; i++)
             {
                 Vector3[] singleHelixArray = dictionaryOfHelixFragments[chainKey][i].ToArray();
@@ -583,10 +595,18 @@ public class MoleculeViewer : MonoBehaviour
             if (Input.anyKey || Input.GetAxis("Mouse ScrollWheel") != 0)
             {
                 rotating = false;
-
-
             }
         }
+
+        if (Time.time<15)
+        {
+            startingText.text = startingString;
+        }
+        else
+        {
+            startingText.enabled = false;
+        }
+        
         PerformKeyboardActions(speed);
 
     }
