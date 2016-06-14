@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 
 
 namespace Assets.Code.Sources
@@ -26,7 +27,7 @@ namespace Assets.Code.Sources
                     endingResidue = Int32.Parse(line.Substring(33, 4).Trim());
                     chainID = line.Substring(19, 1).Trim();
                     length = Int32.Parse(line.Substring(71, 5).Trim());
-
+                   
                 }
                 else if (line.Substring(0, 6).Trim() == "SHEET")
                 {

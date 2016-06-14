@@ -27,6 +27,7 @@ public class PipeTheLine : MonoBehaviour
         SetVertices();      
         SetTriangles();
         mesh.RecalculateNormals();
+          mesh.RecalculateBounds();
        
         
     }

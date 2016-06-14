@@ -223,7 +223,7 @@ namespace Assets.Code.Scripts
                     }
                     else if (Configurator.GetColouring() == Colouring.subunits)
                     {
-                        colouringApplier.SubunitsColouring(thisAtom, atomBall, chainColorDictionary);
+                        colouringApplier.SubunitsColouring(thisAtom.GetChainID(), atomBall, chainColorDictionary);
                     }
                     else if (Configurator.GetColouring() == Colouring.residues)
                     {
@@ -312,7 +312,7 @@ namespace Assets.Code.Scripts
 
             if (Configurator.GetColouring() == Colouring.subunits && thisAtom1.GetChainID() == thisAtom2.GetChainID())
             {
-                colouringApplier.SubunitsColouring(thisAtom1, bond, chainColorDictionary);
+                colouringApplier.SubunitsColouring(thisAtom1.GetChainID(), bond, chainColorDictionary);
             }
 
             if (Configurator.GetColouring() == Colouring.cpk)
@@ -376,6 +376,10 @@ namespace Assets.Code.Scripts
                 GameObject pipe = (GameObject)Instantiate(pipePrefab, Vector3.zero, Quaternion.identity);
                 PipeTheLine backbonePipe = pipe.GetComponent<PipeTheLine>();
                 backbonePipe.DrawThePipe(backbonePointsNew, pipe, 0.4f, 0.4f);
+                if (Configurator.GetColouring() == Colouring.subunits)
+                {
+                    colouringApplier.SubunitsColouring(chainKey, pipe, chainColorDictionary);
+                }
 
             }
         }
@@ -387,6 +391,7 @@ namespace Assets.Code.Scripts
             Dictionary<string, List<List<Vector3>>> dictionaryOfBackboneFragments = new Dictionary<string, List<List<Vector3>>>();
             Dictionary<string, List<List<Vector3>>> dictionaryOfHelixFragments = new Dictionary<string, List<List<Vector3>>>();
             Dictionary<string, List<List<Vector3>>> dictionaryOfSheetFragments = new Dictionary<string, List<List<Vector3>>>();
+            
             foreach (AtomParser thisAtom in listOfAtoms)
             {
                 if (thisAtom.GetAtomName() == "CA")
@@ -408,7 +413,8 @@ namespace Assets.Code.Scripts
 
             for (int i = 0; i < listOfAlphaCarbons.Count; i++)
             {
-
+                print("actual i: " + i + " number of alphaCarbons: " + listOfAlphaCarbons.Count);
+            
                 if (ssi == listOfSecondaryStructures.Count) //loop already passed through the last secondary structure- get tail
                 {
                     singleBackboneFragments.Add(listOfAlphaCarbons[i].GetAtomPosition());
@@ -429,7 +435,7 @@ namespace Assets.Code.Scripts
                 }
                 if (ssi < listOfSecondaryStructures.Count
                     && listOfAlphaCarbons[i].GetResidueSequence() <= listOfSecondaryStructures[ssi].GetStartingResidue())
-                //if position before beginning of secondary structure, add to list
+                //if position before beginning of secondary structure, add to list of backbone fragment
                 {
                     singleBackboneFragments.Add(listOfAlphaCarbons[i].GetAtomPosition());
                 }
@@ -457,10 +463,36 @@ namespace Assets.Code.Scripts
                         List<Vector3> singleHelixFragment = new List<Vector3>();
                         for (int z = i - 1; z < i + listOfSecondaryStructures[ssi].GetLength() - 1; z++) //-1, cause we need index
                         {
+                            if (i == 0)
+                                z = 0;
+                            
+                            if (z == listOfAlphaCarbons.Count)
+                                break;
+                            
                             singleHelixFragment.Add(listOfAlphaCarbons[z].GetAtomPosition());
-                            if (z == i + listOfSecondaryStructures[ssi].GetLength() - 2 && z != listOfAlphaCarbons.Count - 1)
+
+                            if (z == i + listOfSecondaryStructures[ssi].GetLength() - 2 
+                                && z != listOfAlphaCarbons.Count - 1 && listOfAlphaCarbons[z + 1].GetChainID() == listOfAlphaCarbons[z].GetChainID()
+                                && (ssi == listOfSecondaryStructures.Count-1 || 
+                                (ssi!= listOfSecondaryStructures.Count - 1 
+                                && listOfSecondaryStructures[ssi+1].GetStartingResidue() != listOfSecondaryStructures[ssi].GetEndingResidue())) )
                             {
-                                singleHelixFragment.Add(listOfAlphaCarbons[z + 1].GetAtomPosition());
+
+                                List<Vector3> mediatingBackboneFragments = new List<Vector3>();
+                                mediatingBackboneFragments.Add(listOfAlphaCarbons[z].GetAtomPosition());
+                                mediatingBackboneFragments.Add(listOfAlphaCarbons[z + 1].GetAtomPosition());
+
+                                if (dictionaryOfBackboneFragments.ContainsKey(listOfAlphaCarbons[z].GetChainID()))
+                                {
+                                    dictionaryOfBackboneFragments[listOfAlphaCarbons[z].GetChainID()].Add(mediatingBackboneFragments);
+
+                                }
+                                else
+                                {
+                                    List<List<Vector3>> listOfBackboneFragments = new List<List<Vector3>>();
+                                    listOfBackboneFragments.Add(mediatingBackboneFragments);
+                                    dictionaryOfBackboneFragments.Add(listOfAlphaCarbons[z].GetChainID(), listOfBackboneFragments);
+                                }
                             }
                         }
                         if (dictionaryOfHelixFragments.ContainsKey(listOfAlphaCarbons[i].GetChainID()))
@@ -480,10 +512,36 @@ namespace Assets.Code.Scripts
                         List<Vector3> singleSheetFragment = new List<Vector3>();
                         for (int z = i - 1; z < i + listOfSecondaryStructures[ssi].GetLength() - 1; z++)
                         {
-                            singleSheetFragment.Add(listOfAlphaCarbons[z].GetAtomPosition());
-                            if (z == i + listOfSecondaryStructures[ssi].GetLength() - 2 && z != listOfAlphaCarbons.Count - 1)
+                            print("z: " + z + " length of this sheet: "+ listOfSecondaryStructures[ssi].GetLength());
+                            if (i == 0)
                             {
-                                singleSheetFragment.Add(listOfAlphaCarbons[z + 1].GetAtomPosition());
+                                z = 0;
+                            }
+                            if(z==listOfAlphaCarbons.Count)
+                            {
+                                break;
+                            }
+                            singleSheetFragment.Add(listOfAlphaCarbons[z].GetAtomPosition());
+                            if (z == i + listOfSecondaryStructures[ssi].GetLength() - 2 && z != listOfAlphaCarbons.Count - 1
+                                &&listOfAlphaCarbons[z + 1].GetChainID() == listOfAlphaCarbons[z].GetChainID())
+                            {
+
+                                List<Vector3> mediatingBackboneFragments = new List<Vector3>();
+                                mediatingBackboneFragments.Add(listOfAlphaCarbons[z].GetAtomPosition());
+                                mediatingBackboneFragments.Add(listOfAlphaCarbons[z + 1].GetAtomPosition());
+
+
+                                if (dictionaryOfBackboneFragments.ContainsKey(listOfAlphaCarbons[z].GetChainID()))
+                                {
+                                    dictionaryOfBackboneFragments[listOfAlphaCarbons[z].GetChainID()].Add(mediatingBackboneFragments);
+
+                                }
+                                else
+                                {
+                                    List<List<Vector3>> listOfBackboneFragments = new List<List<Vector3>>();
+                                    listOfBackboneFragments.Add(mediatingBackboneFragments);
+                                    dictionaryOfBackboneFragments.Add(listOfAlphaCarbons[z].GetChainID(), listOfBackboneFragments);
+                                }
                             }
                         }
                         if (dictionaryOfSheetFragments.ContainsKey(listOfAlphaCarbons[i].GetChainID()))
@@ -499,7 +557,14 @@ namespace Assets.Code.Scripts
                         }
                     }
 
-                    i = i + listOfSecondaryStructures[ssi].GetLength() - 2; //-2- to cover shared points
+                    if (listOfSecondaryStructures[ssi].GetLength() >= 2)
+                    {
+                        i = i + listOfSecondaryStructures[ssi].GetLength() - 2; //-2- to cover shared points
+                    }
+                    else
+                    {
+                        i++;
+                    }
                     ssi++;
                     singleBackboneFragments = new List<Vector3>();
 
@@ -523,13 +588,21 @@ namespace Assets.Code.Scripts
                         PipeTheLine fragmentPipe = pipe.GetComponent<PipeTheLine>();
                         pipe.name = "backbone";
                         fragmentPipe.DrawThePipe(singleBackboneArrayNew, pipe, 0.4f, 0.4f);
+                        if (Configurator.GetColouring() == Colouring.subunits)
+                        {
+                            colouringApplier.SubunitsColouring(chainKey, pipe, chainColorDictionary);
+                        }
+                        else if (Configurator.GetColouring() == Colouring.secondaryStructures)
+                        {
+                            colouringApplier.SecondaryStructuresColouring(pipe);
+                        }
                     }
                 }
             }
 
             foreach (string chainKey in dictionaryOfHelixFragments.Keys)
             {
-
+                print("mam helisy w tym łańcuchu: " + chainKey);
                 for (int i = 0; i < dictionaryOfHelixFragments[chainKey].Count; i++)
                 {
                     Vector3[] singleHelixArray = dictionaryOfHelixFragments[chainKey][i].ToArray();
@@ -543,16 +616,22 @@ namespace Assets.Code.Scripts
                         Vector3 helixPosition = singleHelixArray[0];
                         GameObject helixPipe = (GameObject)Instantiate(helixPrefab, helixPosition, Quaternion.identity);
                         PipeTheLine fragmentPipe = helixPipe.GetComponent<PipeTheLine>();
-                        helixPipe.name = "helix";
+                        helixPipe.name = SecondaryStructures.alphaHelix;
                         fragmentPipe.DrawThePipe(singleHelixArrayNew, helixPipe, 0.8f, 0.4f);
                         helixPipe.transform.forward = helixOffset;
+                        if (Configurator.GetColouring() == Colouring.subunits)
+                        {
+                            colouringApplier.SubunitsColouring(chainKey, helixPipe, chainColorDictionary);
+                        }
+                        else if (Configurator.GetColouring() == Colouring.secondaryStructures)
+                        {
+                            colouringApplier.SecondaryStructuresColouring(helixPipe);
+                        }
                     }
                 }
             }
-
-            foreach (string chainKey in dictionaryOfSheetFragments.Keys)
-            {
-                // print("dla " + chainKey + " mam tyle harmonijek: " + dictionaryOfHelixFragments[chainKey].Count);
+            foreach (string chainKey in dictionaryOfSheetFragments.Keys) {
+                print("mam sheety w tym łańcuchu: " + chainKey);
                 for (int i = 0; i < dictionaryOfSheetFragments[chainKey].Count; i++)
                 {
                     Vector3[] singleSheetArray = dictionaryOfSheetFragments[chainKey][i].ToArray();
@@ -563,7 +642,7 @@ namespace Assets.Code.Scripts
                     {
                         GameObject sheetPipe = (GameObject)Instantiate(sheetPrefab, Vector3.zero, Quaternion.identity);
                         PipeTheLine fragmentPipe = sheetPipe.GetComponent<PipeTheLine>();
-                        sheetPipe.name = "sheet";
+                        sheetPipe.name = SecondaryStructures.betaSheet;
 
                         //cutting last two points, as they will be covered with arrow head
                         Vector3[] cutSingleSheetArrayNew;
@@ -580,9 +659,23 @@ namespace Assets.Code.Scripts
                             (arrowHeadPrefab, position, Quaternion.identity);
                         arrowHead.transform.up = offset;
                         arrowHead.transform.localScale = scale;
+                        arrowHead.name = SecondaryStructures.betaSheet;
+                        if (Configurator.GetColouring() == Colouring.subunits)
+                        {
+                            colouringApplier.SubunitsColouring(chainKey, sheetPipe, chainColorDictionary);
+                            colouringApplier.SubunitsColouring(chainKey, arrowHead, chainColorDictionary);
+                        }
+                        else if (Configurator.GetColouring() == Colouring.secondaryStructures)
+                        {
+                            colouringApplier.SecondaryStructuresColouring(sheetPipe);
+                            colouringApplier.SecondaryStructuresColouring(arrowHead);
+                        }
+
                     }
+                
                 }
             }
+
         }
 
         // once per frame:

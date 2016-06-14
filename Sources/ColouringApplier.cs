@@ -114,11 +114,11 @@ namespace Assets.Code.Sources
             lineToColour.material = new Material(Shader.Find("Particles/Alpha Blended"));
         }
 
-        public void SubunitsColouring(AtomParser thisAtom, GameObject thingToColour, 
+        public void SubunitsColouring(string chainID, GameObject thingToColour, 
             Dictionary<string, Color> chainColorDictionary)
         {
 
-            thingToColour.GetComponent<Renderer>().material.color = chainColorDictionary[thisAtom.GetChainID()];
+            thingToColour.GetComponent<Renderer>().material.color = chainColorDictionary[chainID];
 
         }
 
@@ -128,6 +128,23 @@ namespace Assets.Code.Sources
             //http://life.nthu.edu.tw/~fmhsu/rasframe/COLORS.HTM
 
             thingToColour.GetComponent<Renderer>().material.color = residueColorDictionary[thisAtom.GetResidueName()];
+
+        }
+
+        public void SecondaryStructuresColouring(GameObject thingToColour)
+        {
+            if (thingToColour.name == SecondaryStructures.alphaHelix)
+            {
+                thingToColour.GetComponent<Renderer>().material.color = Color.red;
+            }
+            else if (thingToColour.name == SecondaryStructures.betaSheet)
+            {
+                thingToColour.GetComponent<Renderer>().material.color = Color.yellow;
+            }
+            else
+            {
+                thingToColour.GetComponent<Renderer>().material.color = Color.white;
+            }
 
         }
     }

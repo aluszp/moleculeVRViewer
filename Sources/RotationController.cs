@@ -34,7 +34,7 @@ namespace Leap.Unity
                     transform.RotateAround(MoleculeViewer.target, transform.TransformDirection(Vector3.left), (rightHand.transform.localPosition.y - oldPosition.y) * 100);
                 }
                 transform.Translate(Vector3.back* (rightHand.transform.localPosition.x - oldPosition.x) * 30);
-                print("pozycja ręki: " + rightHand.transform.localPosition+" old: " + oldPosition + " delta: " + (rightHand.transform.localPosition.x-oldPosition.x));
+                
             }
 
             else if (PinchDetectorB.IsPinching)
@@ -45,9 +45,12 @@ namespace Leap.Unity
                     flag = false;
                 }
                 transform.RotateAround(MoleculeViewer.target, transform.TransformDirection(Vector3.up), (leftHand.transform.localPosition.z - oldPosition.z) * 50);
-                transform.RotateAround(MoleculeViewer.target, transform.TransformDirection(Vector3.left), (leftHand.transform.localPosition.y - oldPosition.y) * 100);
-                print("pozycja ręki: " + leftHand.transform.position);
-                print("old: " + oldPosition);
+
+                if (Mathf.Abs(leftHand.transform.localPosition.x - oldPosition.x) < 0.005)
+                {
+                    transform.RotateAround(MoleculeViewer.target, transform.TransformDirection(Vector3.left), (leftHand.transform.localPosition.y - oldPosition.y) * 100);
+                }
+                transform.Translate(Vector3.back * (leftHand.transform.localPosition.x - oldPosition.x) * 30);
             }
 
             else

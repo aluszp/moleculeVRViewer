@@ -33,11 +33,6 @@ public class HelixPointsMaker : MonoBehaviour
 
         helixPoints.Add(new Vector3(0, 0, directionVector.magnitude));
        
-        Vector3 difference = (endingPoint - helixPoints[helixPoints.Count - 1]);
-        foreach (Vector3 helixPoint in helixPoints)
-        {
-            newHelixPoints.Add(helixPoint + (difference * ((helixPoint - startingPoint).magnitude) / (helixPoints[helixPoints.Count - 1] - startingPoint).magnitude));
-        }
         
         return (helixPoints.ToArray());
     }
