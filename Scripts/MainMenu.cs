@@ -59,8 +59,13 @@ public class MainMenu : MonoBehaviour
 
         Configurator.SetColouring(GetDropdownValue(colouringDropdown));
 
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            Application.Quit();
+        }
 
-    }
+
+        }
 
     void ButtonFunction()
     {

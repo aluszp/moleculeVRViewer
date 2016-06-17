@@ -12,9 +12,17 @@ namespace Assets.Code.Sources
         {
             if (ifStride)
             {
+                int sr, er;
                 typeOfStructure = line.Substring(3, 12).Trim();
-                startingResidue = Int32.Parse(line.Substring(22, 5).Trim());
-                endingResidue = Int32.Parse(line.Substring(40, 5).Trim());
+                if (Int32.TryParse(line.Substring(22, 5).Trim(), out sr))
+                {
+                    startingResidue = sr;
+                }
+                if (Int32.TryParse(line.Substring(40, 5).Trim(), out er))
+                {
+                    endingResidue = er;
+                }
+                
                 chainID = line.Substring(27, 1).Trim();
                 length = endingResidue - startingResidue + 1;
             }

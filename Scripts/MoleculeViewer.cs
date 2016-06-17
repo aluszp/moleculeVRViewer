@@ -15,9 +15,9 @@ namespace Assets.Code.Scripts
         public GameObject helixPrefab;
         public GameObject sheetPrefab;
         public GameObject arrowHeadPrefab;
-        public Camera mainCamera;
-        public GameObject leapMotion;
+        public GameObject mainCamera;
         public Text startingText;
+        public GameObject leftHand;
 
 
         static public Vector3 target; //geometric center of molecule
@@ -391,7 +391,7 @@ namespace Assets.Code.Scripts
             Dictionary<string, List<List<Vector3>>> dictionaryOfBackboneFragments = new Dictionary<string, List<List<Vector3>>>();
             Dictionary<string, List<List<Vector3>>> dictionaryOfHelixFragments = new Dictionary<string, List<List<Vector3>>>();
             Dictionary<string, List<List<Vector3>>> dictionaryOfSheetFragments = new Dictionary<string, List<List<Vector3>>>();
-            
+
             foreach (AtomParser thisAtom in listOfAtoms)
             {
                 if (thisAtom.GetAtomName() == "CA")
@@ -413,8 +413,6 @@ namespace Assets.Code.Scripts
 
             for (int i = 0; i < listOfAlphaCarbons.Count; i++)
             {
-                print("actual i: " + i + " number of alphaCarbons: " + listOfAlphaCarbons.Count);
-            
                 if (ssi == listOfSecondaryStructures.Count) //loop already passed through the last secondary structure- get tail
                 {
                     singleBackboneFragments.Add(listOfAlphaCarbons[i].GetAtomPosition());
@@ -465,17 +463,17 @@ namespace Assets.Code.Scripts
                         {
                             if (i == 0)
                                 z = 0;
-                            
+
                             if (z == listOfAlphaCarbons.Count)
                                 break;
-                            
+
                             singleHelixFragment.Add(listOfAlphaCarbons[z].GetAtomPosition());
 
-                            if (z == i + listOfSecondaryStructures[ssi].GetLength() - 2 
+                            if (z == i + listOfSecondaryStructures[ssi].GetLength() - 2
                                 && z != listOfAlphaCarbons.Count - 1 && listOfAlphaCarbons[z + 1].GetChainID() == listOfAlphaCarbons[z].GetChainID()
-                                && (ssi == listOfSecondaryStructures.Count-1 || 
-                                (ssi!= listOfSecondaryStructures.Count - 1 
-                                && listOfSecondaryStructures[ssi+1].GetStartingResidue() != listOfSecondaryStructures[ssi].GetEndingResidue())) )
+                                && (ssi == listOfSecondaryStructures.Count - 1 ||
+                                (ssi != listOfSecondaryStructures.Count - 1
+                                && listOfSecondaryStructures[ssi + 1].GetStartingResidue() != listOfSecondaryStructures[ssi].GetEndingResidue())))
                             {
 
                                 List<Vector3> mediatingBackboneFragments = new List<Vector3>();
@@ -512,18 +510,17 @@ namespace Assets.Code.Scripts
                         List<Vector3> singleSheetFragment = new List<Vector3>();
                         for (int z = i - 1; z < i + listOfSecondaryStructures[ssi].GetLength() - 1; z++)
                         {
-                            print("z: " + z + " length of this sheet: "+ listOfSecondaryStructures[ssi].GetLength());
                             if (i == 0)
                             {
                                 z = 0;
                             }
-                            if(z==listOfAlphaCarbons.Count)
+                            if (z == listOfAlphaCarbons.Count)
                             {
                                 break;
                             }
                             singleSheetFragment.Add(listOfAlphaCarbons[z].GetAtomPosition());
                             if (z == i + listOfSecondaryStructures[ssi].GetLength() - 2 && z != listOfAlphaCarbons.Count - 1
-                                &&listOfAlphaCarbons[z + 1].GetChainID() == listOfAlphaCarbons[z].GetChainID())
+                                && listOfAlphaCarbons[z + 1].GetChainID() == listOfAlphaCarbons[z].GetChainID())
                             {
 
                                 List<Vector3> mediatingBackboneFragments = new List<Vector3>();
@@ -602,7 +599,6 @@ namespace Assets.Code.Scripts
 
             foreach (string chainKey in dictionaryOfHelixFragments.Keys)
             {
-                print("mam helisy w tym łańcuchu: " + chainKey);
                 for (int i = 0; i < dictionaryOfHelixFragments[chainKey].Count; i++)
                 {
                     Vector3[] singleHelixArray = dictionaryOfHelixFragments[chainKey][i].ToArray();
@@ -630,8 +626,8 @@ namespace Assets.Code.Scripts
                     }
                 }
             }
-            foreach (string chainKey in dictionaryOfSheetFragments.Keys) {
-                print("mam sheety w tym łańcuchu: " + chainKey);
+            foreach (string chainKey in dictionaryOfSheetFragments.Keys)
+            {
                 for (int i = 0; i < dictionaryOfSheetFragments[chainKey].Count; i++)
                 {
                     Vector3[] singleSheetArray = dictionaryOfSheetFragments[chainKey][i].ToArray();
@@ -672,7 +668,7 @@ namespace Assets.Code.Scripts
                         }
 
                     }
-                
+
                 }
             }
 
@@ -694,13 +690,20 @@ namespace Assets.Code.Scripts
             if (Time.time < 15)
             {
                 startingText.text = startingString;
+                
             }
             else
             {
                 startingText.enabled = false;
+                rotating = false;
             }
 
             PerformKeyboardActions(speed);
+
+            if(Configurator.GetRepresentationStyle() != RepresentationStyles.ballsAndSticks && Configurator.GetRepresentationStyle() != RepresentationStyles.vanDerWaals)
+            {
+                leftHand.SetActive(false);
+            }
 
         }
 
@@ -735,24 +738,12 @@ namespace Assets.Code.Scripts
                 transform.Translate(Vector3.forward);
             }
 
-            if (Input.GetKey(KeyCode.Return))
-            {
-                enterPressed = true;
-            }
+         
 
-            if (enterPressed && (Configurator.GetRepresentationStyle() == RepresentationStyles.vanDerWaals
-                || Configurator.GetRepresentationStyle() == RepresentationStyles.ballsAndSticks))
+
+            if (Input.GetKeyDown(KeyCode.Escape))
             {
-                if (mainCamera.isActiveAndEnabled)
-                {
-                    mainCamera.enabled = false;
-                    leapMotion.SetActive(true);
-                }
-            }
-            else
-            {
-                mainCamera.enabled = true;
-                leapMotion.SetActive(false);
+                Application.Quit();
             }
 
 

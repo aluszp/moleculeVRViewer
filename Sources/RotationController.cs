@@ -9,8 +9,6 @@ namespace Leap.Unity
     class RotationController: MonoBehaviour
     {
         public PinchDetector PinchDetectorA;
-        public PinchDetector PinchDetectorB;
-        public GameObject leftHand;
         public GameObject rightHand;
         
         bool flag = true;
@@ -31,28 +29,16 @@ namespace Leap.Unity
 
                 if (Mathf.Abs(rightHand.transform.localPosition.x - oldPosition.x) < 0.005)
                 {
-                    transform.RotateAround(MoleculeViewer.target, transform.TransformDirection(Vector3.left), (rightHand.transform.localPosition.y - oldPosition.y) * 100);
+                    transform.RotateAround(MoleculeViewer.target, transform.TransformDirection(Vector3.left), (rightHand.transform.localPosition.y - oldPosition.y) * 70);
                 }
-                transform.Translate(Vector3.back* (rightHand.transform.localPosition.x - oldPosition.x) * 30);
-                
+
+                if (Mathf.Abs(Vector3.Distance(transform.localPosition, MoleculeViewer.target)) < 100)
+                {
+                    transform.Translate(Vector3.forward * (rightHand.transform.localPosition.x - oldPosition.x) * 30);
+                }
             }
 
-            else if (PinchDetectorB.IsPinching)
-            {
-                if (flag)
-                {
-                    oldPosition = leftHand.transform.position;
-                    flag = false;
-                }
-                transform.RotateAround(MoleculeViewer.target, transform.TransformDirection(Vector3.up), (leftHand.transform.localPosition.z - oldPosition.z) * 50);
-
-                if (Mathf.Abs(leftHand.transform.localPosition.x - oldPosition.x) < 0.005)
-                {
-                    transform.RotateAround(MoleculeViewer.target, transform.TransformDirection(Vector3.left), (leftHand.transform.localPosition.y - oldPosition.y) * 100);
-                }
-                transform.Translate(Vector3.back * (leftHand.transform.localPosition.x - oldPosition.x) * 30);
-            }
-
+          
             else
             {
                 flag = true;

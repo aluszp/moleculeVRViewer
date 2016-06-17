@@ -60,6 +60,10 @@ namespace Assets.Code.Sources
 
         public Dictionary<string, Color> PrepareForCpkColouring()
         {
+            Color darkGreen = new Color32(0, 102, 0, 1);
+            Color violet = new Color32(159, 0, 255, 1);
+            Color darkViolet = new Color32(148, 0, 211, 1);
+            Color orange = new Color32(255, 153, 0, 1);
             Dictionary<string, Color> atomColorDictionary = new Dictionary<string, Color>();
             atomColorDictionary.Add("H", Color.white);
             atomColorDictionary.Add("C", Color.black);
@@ -67,11 +71,24 @@ namespace Assets.Code.Sources
             atomColorDictionary.Add("O", Color.red);
             atomColorDictionary.Add("F", Color.green);
             atomColorDictionary.Add("CL", Color.green);
-            atomColorDictionary.Add("P", new Color32(255, 153, 0, 1)); //orange
+            atomColorDictionary.Add("P", orange);
+            atomColorDictionary.Add("FE", orange);
+            atomColorDictionary.Add("TI", Color.gray);
             atomColorDictionary.Add("S", Color.yellow);
             atomColorDictionary.Add("BR", new Color32(153, 0, 0, 1));//dark red
-            atomColorDictionary.Add("MG", new Color32(0, 102, 0, 1)); //dark green
-
+            atomColorDictionary.Add("MG", darkGreen);
+            atomColorDictionary.Add("BE", darkGreen);
+            atomColorDictionary.Add("CA", darkGreen);
+            atomColorDictionary.Add("SR", darkGreen);
+            atomColorDictionary.Add("BA", darkGreen);
+            atomColorDictionary.Add("RA", darkGreen);
+            atomColorDictionary.Add("LI", violet);
+            atomColorDictionary.Add("NA", violet);
+            atomColorDictionary.Add("K", violet);
+            atomColorDictionary.Add("RB", violet);
+            atomColorDictionary.Add("CS", violet);
+            atomColorDictionary.Add("FR", violet);
+            atomColorDictionary.Add("I", darkViolet);
             return atomColorDictionary;
         }
 

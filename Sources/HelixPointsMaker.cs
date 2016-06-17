@@ -14,9 +14,7 @@ public class HelixPointsMaker : MonoBehaviour
 
         Vector3 directionVector = endingPoint - startingPoint;
 
-        List<Vector3> helixPoints = new List<Vector3>();
-        List<Vector3> newHelixPoints = new List<Vector3>();
-        
+        List<Vector3> helixPoints = new List<Vector3>();       
 
         
         for (float t=0; t<=T; t += 0.1f)

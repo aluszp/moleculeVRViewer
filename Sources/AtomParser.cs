@@ -26,7 +26,7 @@ namespace Assets.Code.Sources
             resName = lineOfFile.Substring(17, 3).Trim();
             chainID = lineOfFile.Substring(21, 1).Trim();
             resSeq = Int32.Parse(lineOfFile.Substring(22, 4).Trim());
-            elementType = lineOfFile.Substring(77, 1).Trim();
+            elementType = lineOfFile.Substring(76, 2).Trim();
         }
 
         public int GetSerial ()
